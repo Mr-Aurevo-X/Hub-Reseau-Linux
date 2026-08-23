@@ -6,7 +6,7 @@
 Hub réseau **local-first** pour Linux (GTK 4 / libadwaita).  
 Interfaces, trafic, parc d’atelier, scan LAN privé, diagnostic à la demande, VPN / WireGuard NetworkManager.
 
-**1.3.2** — [releases](https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases) · GPL-3.0-or-later · © 2026 Mr-Aurevo-X
+**1.3.3** — [releases](https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases) · GPL-3.0-or-later · © 2026 Mr-Aurevo-X
 
 ---
 
@@ -19,10 +19,10 @@ Prérequis : [Flatpak](https://flatpak.org/setup/) + runtime GNOME 49 (installé
 ```bash
 rm -f org.mraurevox.HubReseau.flatpak
 wget --no-continue -O org.mraurevox.HubReseau.flatpak \
-  https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases/download/v1.3.2/org.mraurevox.HubReseau.flatpak
+  https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases/download/v1.3.3/org.mraurevox.HubReseau.flatpak
 flatpak install --user -y --reinstall ./org.mraurevox.HubReseau.flatpak
 wget --no-continue -O INSTALLER-RACCOURCI-FLATPAK.sh \
-  https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases/download/v1.3.2/INSTALLER-RACCOURCI-FLATPAK.sh
+  https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases/download/v1.3.3/INSTALLER-RACCOURCI-FLATPAK.sh
 bash ./INSTALLER-RACCOURCI-FLATPAK.sh
 flatpak run org.mraurevox.HubReseau
 ```
@@ -67,10 +67,10 @@ Local-first Linux network hub (GTK 4 / libadwaita): adapters, fleet, private LAN
 ```bash
 rm -f org.mraurevox.HubReseau.flatpak
 wget --no-continue -O org.mraurevox.HubReseau.flatpak \
-  https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases/download/v1.3.2/org.mraurevox.HubReseau.flatpak
+  https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases/download/v1.3.3/org.mraurevox.HubReseau.flatpak
 flatpak install --user -y --reinstall ./org.mraurevox.HubReseau.flatpak
 wget --no-continue -O INSTALLER-RACCOURCI-FLATPAK.sh \
-  https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases/download/v1.3.2/INSTALLER-RACCOURCI-FLATPAK.sh
+  https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases/download/v1.3.3/INSTALLER-RACCOURCI-FLATPAK.sh
 bash ./INSTALLER-RACCOURCI-FLATPAK.sh
 flatpak run org.mraurevox.HubReseau
 ```
