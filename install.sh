@@ -62,7 +62,7 @@ detect_pkg_family() {
 flatpak_hint() {
   echo
   echo "Si GTK4 / Libadwaita ne sont pas disponibles sur cette distro, utilisez le Flatpak :"
-  echo "  https://github.com/Mr-Aurevo-X/Hub-Reseau/releases"
+  echo "  https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases"
   echo "  (runtime Flathub org.gnome.Platform 49 — compatible toutes distros)"
 }
 
@@ -255,7 +255,7 @@ install_desktop_entry() {
 Type=Application
 Version=1.0
 Name=${APP_NAME}
-Comment=Gestion systeme Linux (monitoring, services, nettoyeur)
+Comment=Hub réseau local : interfaces, parc, scan LAN, diagnostic, VPN
 Exec=${LAUNCHER}
 Path=${INSTALL_DIR}
 Icon=utilities-system-monitor
@@ -309,7 +309,7 @@ main() {
   echo "  ou      : ${LAUNCHER}"
   echo "  ou      : bash ${INSTALL_DIR}/LANCER.sh"
   echo "Desinstaller : bash ${INSTALL_DIR}/uninstall.sh"
-  echo "Flatpak (toutes distros) : https://github.com/Mr-Aurevo-X/Hub-Reseau/releases"
+  echo "Flatpak (toutes distros) : https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases"
 }
 
 main "$@"

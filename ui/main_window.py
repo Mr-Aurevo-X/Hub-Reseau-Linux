@@ -22,7 +22,6 @@ from core import (
 from ui import pages as ui_pages
 from ui.adw_compat import (
     make_message_dialog,
-    make_spin_row,
     make_switch_row,
     response_appearance,
 )
@@ -247,15 +246,6 @@ class MainWindow(Adw.ApplicationWindow):
         page.set_title(i18n.t("preferences"))
         page.set_icon_name("preferences-system-symbolic")
 
-        general = Adw.PreferencesGroup()
-        general.set_title(i18n.t("general"))
-
-        alerts_row = make_switch_row()
-        alerts_row.set_title(i18n.t("alerts"))
-        alerts_row.set_active(bool(self._settings.get("alerts_enabled", True)))
-        general.add(alerts_row)
-        page.add(general)
-
         appearance = Adw.PreferencesGroup()
         appearance.set_title(kit_t("appearance", i18n.get_language()))
         appearance.set_description(kit_t("appearance_sub", i18n.get_language()))
@@ -291,30 +281,6 @@ class MainWindow(Adw.ApplicationWindow):
         updates.add(update_row)
         page.add(updates)
 
-        thresholds = Adw.PreferencesGroup()
-        thresholds.set_title(i18n.t("alert_thresholds"))
-        th = dict(self._settings.get("thresholds") or app_settings.DEFAULTS["thresholds"])
-
-        def _spin_row(title: str, value: float, *, upper: float = 100.0) -> Gtk.Widget:
-            adj = Gtk.Adjustment(
-                value=float(value),
-                lower=1.0,
-                upper=upper,
-                step_increment=1.0,
-                page_increment=5.0,
-            )
-            row = make_spin_row(adjustment=adj, digits=0)
-            row.set_title(title)
-            return row
-
-        cpu_row = _spin_row(i18n.t("cpu_pct"), float(th.get("cpu_percent", 90)))
-        ram_row = _spin_row(i18n.t("ram_pct"), float(th.get("ram_percent", 90)))
-        temp_row = _spin_row(i18n.t("temp_c"), float(th.get("temp_celsius", 85)), upper=120.0)
-        disk_row = _spin_row(i18n.t("disk_pct"), float(th.get("disk_percent", 90)))
-        for row in (cpu_row, ram_row, temp_row, disk_row):
-            thresholds.add(row)
-        page.add(thresholds)
-
         save_group = Adw.PreferencesGroup()
         save_btn = Gtk.Button(label=i18n.t("save"))
         save_btn.add_css_class("suggested-action")
@@ -324,18 +290,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         def on_save(*_a: object) -> None:
             new_settings = dict(self._settings)
-            new_settings.update(
-                {
-                    "alerts_enabled": alerts_row.get_active(),
-                    "auto_update_on_startup": update_row.get_active(),
-                    "thresholds": {
-                        "cpu_percent": float(cpu_row.get_value()),
-                        "ram_percent": float(ram_row.get_value()),
-                        "temp_celsius": float(temp_row.get_value()),
-                        "disk_percent": float(disk_row.get_value()),
-                    },
-                }
-            )
+            new_settings["auto_update_on_startup"] = update_row.get_active()
             app_settings.save_settings(new_settings)
             self._settings = app_settings.load_settings()
             show_toast(self._toast_overlay, i18n.t("prefs_saved"))

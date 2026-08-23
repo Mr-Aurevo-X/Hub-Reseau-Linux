@@ -16,7 +16,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from core import host, settings as app_settings
+from core import host, paths
 
 MAX_MACHINES = 32
 PROBES = ("tcp:22", "tcp:3389", "tcp:445", "icmp")
@@ -60,7 +60,7 @@ def machines_grouped(machines: list[dict[str, Any]]) -> list[tuple[str, list[dic
 
 
 def fleet_path() -> Path:
-    return app_settings.config_dir() / "fleet.json"
+    return paths.config_dir() / "fleet.json"
 
 
 def validate_name(name: str) -> str:

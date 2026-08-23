@@ -2,8 +2,7 @@
 
 | Canal | Repo | Paquet | Notes |
 | --- | --- | --- | --- |
-| **Flatpak (seul canal)** | [Gest_Linux_Pro/releases](https://github.com/Mr-Aurevo-X/Hub-Reseau/releases) | `org.mraurevox.HubReseau.flatpak` | Même UI (runtime Flathub GNOME 49) sur CachyOS, Arch, Fedora, Ubuntu, Mint, openSUSE ; **MAJ auto** via API `Gest_Linux_Pro` |
+| **Natif (clone)** | ce dépôt | `bash install.sh --skip-deps` | Lanceur `hub-reseau` |
+| **Flatpak** | [Hub-Reseau-Linux](https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux) | `org.mraurevox.HubReseau.flatpak` | Runtime Flathub GNOME 49 ; MAJ via l’API de ce repo uniquement |
 
-Crypto Tracker et UtilKit restent sur les hubs `linux-releases` / `linux-flatpak-releases`. **Gest n’y est plus publié.**
-
-Plus de tarball native publique pour Gest.
+Pas de publication sur `linux-releases` / `linux-flatpak-releases`. Pas de tarball Gest.

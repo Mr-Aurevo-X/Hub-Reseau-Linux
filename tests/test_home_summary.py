@@ -16,7 +16,8 @@ def _snap() -> adapters.AdapterSnapshot:
         ],
         gateway="192.168.128.1",
         default_iface="enp37s0",
-        dns=["127.0.0.53"],
+        dns=["192.168.128.1"],
+        dns_stub=["127.0.0.53"],
     )
 
 
@@ -44,9 +45,15 @@ def test_dashboard_cards(monkeypatch) -> None:  # type: ignore[no-untyped-def]
         dash = home_summary.dashboard()
         by_key = {card.key: card for card in dash.cards}
         assert "192.168.129.2" in by_key["ifaces"].body
+        assert "d8:43:ae:c1:db:02" in by_key["ifaces"].detail
         assert "192.168.128.1" in by_key["route"].body
+        assert "192.168.128.1" in by_key["dns"].body
         assert "127.0.0.53" in by_key["dns"].body
         assert "3" in by_key["scan"].body
         assert "1" in by_key["fleet"].body
+        assert home_summary.card_target("ifaces") == ("network", "adapters")
+        assert home_summary.card_target("wifi") == ("network", "wifi")
+        assert home_summary.card_target("scan") == ("lan_scan", "")
+        assert home_summary.card_target("host") is None
     finally:
         i18n.set_language(previous)

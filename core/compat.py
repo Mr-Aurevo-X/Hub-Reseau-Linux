@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Startup compatibility checks for native and Flatpak launches."""
+"""Startup compatibility checks for the network hub."""
 
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ from typing import Any
 
 from core import host
 
-_HOST_CORE_COMMANDS = ("python3", "systemctl", "journalctl", "pkexec")
-_HOST_OPTIONAL_COMMANDS = ("flatpak", "snap", "apt", "dnf", "pacman", "zypper", "apk", "timeshift", "ufw")
+_HOST_CORE_COMMANDS = ("python3", "ip", "nmcli", "pkexec")
+_HOST_OPTIONAL_COMMANDS = ("resolvectl", "flatpak")
 
 
 def _read_os_release(path: Path = Path("/etc/os-release")) -> dict[str, str]:
@@ -59,26 +59,14 @@ def collect_startup_compatibility() -> dict[str, Any]:
     optional_commands = _which_many(_HOST_OPTIONAL_COMMANDS)
     warnings: list[str] = []
 
-    if flatpak:
-        if not _host_shell_works():
-            warnings.append(
-                "Pont hote Flatpak indisponible: les actions systeme seront limitees."
-            )
-        if core_commands.get("python3") is None:
-            warnings.append(
-                "Python 3 hote introuvable: monitoring et processus peuvent etre limites."
-            )
-        if core_commands.get("pkexec") is None:
-            warnings.append(
-                "pkexec introuvable sur l'hote: les actions administrateur seront limitees."
-            )
-        missing_service_tools = [
-            name for name in ("systemctl", "journalctl") if core_commands.get(name) is None
-        ]
-        if missing_service_tools:
-            warnings.append(
-                "Outils systeme absents sur l'hote: " + ", ".join(missing_service_tools)
-            )
+    if flatpak and not _host_shell_works():
+        warnings.append("Pont hôte Flatpak indisponible : les actions système seront limitées.")
+    if core_commands.get("pkexec") is None:
+        warnings.append("pkexec introuvable : les actions administrateur seront limitées.")
+    if core_commands.get("nmcli") is None:
+        warnings.append("nmcli introuvable : Wi-Fi et VPN NetworkManager seront limités.")
+    if core_commands.get("ip") is None:
+        warnings.append("commande ip introuvable : adaptateurs et scan LAN seront limités.")
 
     return {
         "flatpak": flatpak,

@@ -8,6 +8,20 @@ from dataclasses import dataclass, field
 
 from core import adapters, fleet, i18n, lan_scan, network_ctl, vpn_ctl
 
+CARD_PAGES: dict[str, tuple[str, str]] = {
+    "ifaces": ("network", "adapters"),
+    "route": ("network", "adapters"),
+    "dns": ("network", "adapters"),
+    "wifi": ("network", "wifi"),
+    "vpn": ("vpn", ""),
+    "fleet": ("fleet", ""),
+    "scan": ("lan_scan", ""),
+}
+
+
+def card_target(key: str) -> tuple[str, str] | None:
+    return CARD_PAGES.get(key)
+
 
 @dataclass
 class HomeCard:
@@ -77,11 +91,12 @@ def _route_card(snap: adapters.AdapterSnapshot) -> HomeCard:
 def _dns_card(snap: adapters.AdapterSnapshot) -> HomeCard:
     if not snap.dns:
         return HomeCard(key="dns", title=i18n.t("home_card_dns"), body="—")
-    return HomeCard(
-        key="dns",
-        title=i18n.t("home_card_dns"),
-        body=i18n.t("home_dns", servers=", ".join(snap.dns)),
-    )
+    servers = ", ".join(snap.dns)
+    if snap.dns_stub:
+        body = i18n.t("home_dns_stub", servers=servers, stub=", ".join(snap.dns_stub))
+    else:
+        body = i18n.t("home_dns", servers=servers)
+    return HomeCard(key="dns", title=i18n.t("home_card_dns"), body=body)
 
 
 def _vpn_card() -> HomeCard:

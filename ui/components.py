@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Reusable GTK4 / Libadwaita widgets for Gest_Linux_Pro."""
+"""Reusable GTK4 / Libadwaita widgets for Hub Réseau."""
 
 from __future__ import annotations
 
@@ -13,6 +13,9 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
 from gi.repository import Adw, Gdk, GLib, Gtk  # noqa: E402
+
+from core import i18n
+from ui.adw_compat import make_message_dialog, response_appearance
 
 
 def make_spinner(*, size: int = 24) -> Gtk.Widget:
@@ -287,9 +290,6 @@ def confirm_dialog(
     destructive: bool = True,
     on_confirm: Callable[[], None] | None = None,
 ) -> Any:
-    from core import i18n
-    from ui.adw_compat import make_message_dialog, response_appearance
-
     dialog = make_message_dialog(parent, heading, body)
     dialog.add_response("cancel", cancel_label or i18n.t("cancel"))
     dialog.add_response("confirm", confirm_label or i18n.t("confirm"))

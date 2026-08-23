@@ -1,8 +1,7 @@
 # Packaging Hub Réseau
 
 - `packaging/build-flatpak.sh` → `dist/org.mraurevox.HubReseau.flatpak`
-- `packaging/publish-flatpak-release.sh` → release `vX.Y.Z` sur **Gest_Linux_Pro** uniquement
-- `packaging/sync-public-readmes.sh` : LEGAL sur les hubs CT (`linux-releases`, `linux-flatpak-releases`) — **pas** de release Gest sur ces hubs
-- Templates hub CT : `public-readme-flatpak.md.in`, `public-readme-native.md.in` (référence ; sync README depuis crypto-tracker)
+- `packaging/publish-flatpak-release.sh` → release `vX.Y.Z` sur **Hub-Reseau-Linux**
+- Install native locale : `bash install.sh --skip-deps` (lanceur `hub-reseau`)
 
-**Flatpak uniquement** (`Gest_Linux_Pro/releases`). `install.sh` n’est plus l’install utilisateur.
+**Flatpak** : [Hub-Reseau-Linux/releases](https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases). Pas de tarball Gest, pas de hub `linux-releases`.

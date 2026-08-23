@@ -1,15 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Flatpak-aware host execution.
 
-Inside a Flatpak sandbox, ``/proc`` and host tools (systemctl, pkexec,
-journalctl, …) are not the real system. Commands are forwarded with
-``flatpak-spawn --host``. Metrics and process lists use a stdlib probe
-run on the host Python.
+Inside a Flatpak sandbox, host tools are forwarded with
+``flatpak-spawn --host``.
 """
 
 from __future__ import annotations
 
-import json
 import os
 import shutil
 import subprocess
@@ -20,12 +17,10 @@ _orig_run = subprocess.run
 _orig_which = shutil.which
 _installed = False
 
-_PROBE = Path(__file__).with_name("host_probe.py")
-
 # Sandbox PATH is typically /app/bin:/usr/bin — host tools live in /usr/sbin too.
 _HOST_PATH = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-# Forwarded Flatpak env breaks host binaries (ufw is Python, timeshift uses GTK/GI).
+# Forwarded Flatpak env breaks host binaries (Python/GI tools inherit sandbox libs).
 _UNSET_HOST_ENV = (
     "LD_LIBRARY_PATH",
     "LD_PRELOAD",
@@ -158,106 +153,4 @@ def install_flatpak_host_bridge() -> None:
     subprocess.run = run  # type: ignore[assignment]
     shutil.which = which  # type: ignore[assignment]
     _installed = True
-
-
-def _host_probe(mode: str, *extra: str, timeout: float = 12.0) -> dict[str, Any]:
-    script = _PROBE.read_text(encoding="utf-8")
-    completed = _orig_run(
-        wrap(["python3", "-", mode, *extra]),
-        input=script,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-        check=False,
-        cwd=host_cwd(),
-    )
-    if completed.returncode != 0:
-        err = (completed.stderr or completed.stdout or "").strip()
-        raise RuntimeError(err or f"host probe failed ({completed.returncode})")
-    raw = (completed.stdout or "").strip()
-    if not raw:
-        return {}
-    data = json.loads(raw)
-    if not isinstance(data, dict):
-        raise RuntimeError("host probe returned invalid JSON")
-    return data
-
-
-def collect_metrics() -> dict[str, Any]:
-    return _host_probe("metrics", timeout=15.0)
-
-
-def collect_inventory() -> dict[str, Any]:
-    return _host_probe("inventory", timeout=20.0)
-
-
-def list_processes(*, limit: int | None = None) -> list[dict[str, Any]]:
-    extra = [str(int(limit))] if limit is not None and limit > 0 else []
-    data = _host_probe("processes", *extra, timeout=12.0)
-    rows = data.get("processes") or []
-    return rows if isinstance(rows, list) else []
-
-
-def process_details(pid: int) -> dict[str, Any]:
-    data = _host_probe("details", str(int(pid)), timeout=8.0)
-    if data.get("error"):
-        raise RuntimeError(str(data["error"]))
-    return data
-
-
-def process_tree(pid: int) -> dict[str, Any]:
-    data = _host_probe("tree", str(int(pid)), timeout=8.0)
-    if data.get("error"):
-        raise RuntimeError(str(data["error"]))
-    return data
-
-
-def kill_process(pid: int, signum: int) -> None:
-    completed = run(
-        ["kill", f"-{int(signum)}", str(int(pid))],
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=15,
-    )
-    if completed.returncode == 0:
-        return
-    if which("pkexec") is None:
-        err = (completed.stderr or completed.stdout or "kill a échoué").strip()
-        raise RuntimeError(err)
-    completed = run(
-        ["pkexec", "kill", f"-{int(signum)}", str(int(pid))],
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    if completed.returncode != 0:
-        err = (completed.stderr or completed.stdout or "kill a échoué").strip()
-        raise RuntimeError(err)
-
-
-def renice_process(pid: int, nice: int) -> None:
-    completed = run(
-        ["renice", "-n", str(int(nice)), "-p", str(int(pid))],
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=15,
-    )
-    if completed.returncode == 0:
-        return
-    if which("pkexec") is None:
-        err = (completed.stderr or completed.stdout or "renice a échoué").strip()
-        raise RuntimeError(err)
-    completed = run(
-        ["pkexec", "renice", "-n", str(int(nice)), "-p", str(int(pid))],
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    if completed.returncode != 0:
-        err = (completed.stderr or completed.stdout or "renice a échoué").strip()
-        raise RuntimeError(err)
 

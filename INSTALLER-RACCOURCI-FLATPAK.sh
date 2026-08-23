@@ -17,8 +17,8 @@ else
 Type=Application
 Version=1.0
 Name=Hub Réseau
-Comment=Gestion système Linux (santé, monitoring, paquets, clichés)
-Comment[en]=Linux system manager (monitoring, services, cleaner)
+Comment=Hub réseau local : interfaces, parc, scan LAN, diagnostic, VPN
+Comment[en]=Local network hub: adapters, fleet, LAN scan, diagnostics, VPN
 Exec=flatpak run ${APP_ID}
 Icon=${APP_ID}
 Terminal=false

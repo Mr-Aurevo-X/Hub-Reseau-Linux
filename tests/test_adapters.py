@@ -85,11 +85,34 @@ def test_snapshot_merges_route_and_counters() -> None:
         addr_json=_ADDR,
         route_json=_ROUTE,
         resolv_text="nameserver 9.9.9.9\n",
+        resolvectl_text="",
         netdev_text=_NETDEV,
     )
     assert snap.gateway == "192.168.128.1"
     assert snap.dns == ["9.9.9.9"]
+    assert snap.dns_stub == []
     nic = next(r for r in snap.adapters if r.name == "enp37s0")
     assert nic.rx_bytes == 5000
     assert nic.tx_bytes == 2000
     assert snap.default_iface == "enp37s0"
+
+
+def test_parse_resolvectl_dns_global_and_link() -> None:
+    text = (
+        "Global:\n"
+        "Link 2 (enp37s0): 192.168.128.1\n"
+        "Link 3 (wlan0): 1.1.1.1 8.8.8.8\n"
+    )
+    assert adapters.parse_resolvectl_dns(text) == ["192.168.128.1", "1.1.1.1", "8.8.8.8"]
+
+
+def test_snapshot_prefers_resolvectl_upstream_over_stub() -> None:
+    snap = adapters.snapshot(
+        addr_json=_ADDR,
+        route_json=_ROUTE,
+        resolv_text="nameserver 127.0.0.53\n",
+        resolvectl_text="Link 2 (enp37s0): 192.168.128.1\n",
+        netdev_text=_NETDEV,
+    )
+    assert snap.dns == ["192.168.128.1"]
+    assert snap.dns_stub == ["127.0.0.53"]

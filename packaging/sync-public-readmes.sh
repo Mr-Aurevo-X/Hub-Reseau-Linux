@@ -4,7 +4,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-GEST_VERSION="$(tr -d '[:space:]' < "${ROOT}/VERSION")"
+HUB_VERSION="$(tr -d '[:space:]' < "${ROOT}/VERSION")"
 need() { command -v "$1" >/dev/null 2>&1 || { echo "manque: $1" >&2; exit 1; }; }
 need gh
 need base64
@@ -23,7 +23,7 @@ put_legal_file() {
   echo "OK ${dest} → ${repo}"
 }
 
-echo "Gest ${GEST_VERSION} : hubs CT-only — pas de README hub depuis Gest."
-echo "Flatpak : https://github.com/Mr-Aurevo-X/Hub-Reseau/releases"
+echo "Hub Réseau ${HUB_VERSION} : LEGAL sur hubs CT (pas de release Hub sur ces hubs)."
+echo "Flatpak : https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases"
 put_legal_file "Mr-Aurevo-X/linux-releases"
 put_legal_file "Mr-Aurevo-X/linux-flatpak-releases"

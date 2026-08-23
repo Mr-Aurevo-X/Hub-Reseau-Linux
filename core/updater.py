@@ -6,10 +6,9 @@ from __future__ import annotations
 import json
 import logging
 import re
-import shutil
 import ssl
-import tarfile
-import tempfile
+import subprocess
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -18,35 +17,30 @@ from typing import Any, Literal
 
 from core import host
 
-log = logging.getLogger("gest.updater")
+log = logging.getLogger("hub_reseau.updater")
 
 Channel = Literal["flatpak", "native"]
 
-GEST_REPO = "Mr-Aurevo-X/Hub-Reseau-Linux"
-FLATPAK_RELEASES_API = f"https://api.github.com/repos/{GEST_REPO}/releases"
-FLATPAK_PUBLIC_RELEASES = f"https://github.com/{GEST_REPO}/releases"
+HUB_REPO = "Mr-Aurevo-X/Hub-Reseau-Linux"
+GEST_REPO = HUB_REPO
+FLATPAK_RELEASES_API = f"https://api.github.com/repos/{HUB_REPO}/releases"
+FLATPAK_PUBLIC_RELEASES = f"https://github.com/{HUB_REPO}/releases"
 FLATPAK_ASSET = "org.mraurevox.HubReseau.flatpak"
 SHORTCUT_ASSET = "INSTALLER-RACCOURCI-FLATPAK.sh"
 FLATPAK_DIRECT = (
-    f"https://github.com/{GEST_REPO}/releases/download/"
+    f"https://github.com/{HUB_REPO}/releases/download/"
     "v{version}/" + FLATPAK_ASSET
 )
 SHORTCUT_DIRECT = (
-    f"https://github.com/{GEST_REPO}/releases/download/"
+    f"https://github.com/{HUB_REPO}/releases/download/"
     "v{version}/" + SHORTCUT_ASSET
 )
 
-NATIVE_RELEASES_API = "https://api.github.com/repos/Mr-Aurevo-X/linux-releases/releases"
-NATIVE_PUBLIC_RELEASES = "https://github.com/Mr-Aurevo-X/linux-releases/releases"
-NATIVE_ASSET_TMPL = "Gest_Linux_Pro-{version}.tar.gz"
-NATIVE_DIRECT = (
-    "https://github.com/Mr-Aurevo-X/linux-releases/releases/download/"
-    "Gest_Linux_Pro-v{version}/" + NATIVE_ASSET_TMPL
-)
+NATIVE_INSTALL_HINT = "bash install.sh --skip-deps"
 
 APP_ID = "org.mraurevox.HubReseau"
 TAG_PREFIX = "v"
-_TAG_RE = re.compile(r"(?:Gest_Linux_Pro-v|v)(\d+\.\d+\.\d+)")
+_TAG_RE = re.compile(r"v(\d+\.\d+\.\d+)")
 _SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 _NOTES_MAX = 480
 
@@ -55,17 +49,15 @@ RELEASES_API = FLATPAK_RELEASES_API
 PUBLIC_RELEASES = FLATPAK_PUBLIC_RELEASES
 ASSET_NAME = FLATPAK_ASSET
 DIRECT_URL = (
-    f"https://github.com/{GEST_REPO}/releases/download/"
+    f"https://github.com/{HUB_REPO}/releases/download/"
     f"v{{version}}/{FLATPAK_ASSET}"
 )
 
-# Only GitHub public release APIs + their HTTPS CDNs. No other host, ever.
-_ALLOWED_API_URLS = frozenset({FLATPAK_RELEASES_API, NATIVE_RELEASES_API})
+# Only this repo's GitHub release API + HTTPS CDNs. No other host, ever.
+_ALLOWED_API_URLS = frozenset({FLATPAK_RELEASES_API})
 _ALLOWED_GITHUB_PATH_PREFIXES = (
-    f"/repos/{GEST_REPO}/",
-    f"/{GEST_REPO}/",
-    "/repos/Mr-Aurevo-X/linux-releases/",
-    "/Mr-Aurevo-X/linux-releases/",
+    f"/repos/{HUB_REPO}/",
+    f"/{HUB_REPO}/",
 )
 _CDN_HOSTS = frozenset(
     {
@@ -206,10 +198,8 @@ def updates_dir() -> Path:
 
 
 def public_download_url(version: str, channel: Channel | None = None) -> str:
-    ch = channel or update_channel()
-    if ch == "flatpak":
-        return FLATPAK_DIRECT.format(version=version)
-    return NATIVE_DIRECT.format(version=version)
+    _ = channel or update_channel()
+    return FLATPAK_DIRECT.format(version=version)
 
 
 def restart_hint(channel: Channel | None = None) -> str:
@@ -237,10 +227,7 @@ def format_update_dialog_commands(info: dict[str, Any]) -> str:
     channel = str(info.get("channel") or update_channel())
     if channel == "flatpak":
         return flatpak_install_block(info)
-    latest = str(info.get("version") or "?")
-    url = str(info.get("download_url") or public_download_url(latest, "native"))
-    asset = str(info.get("asset_name") or _asset_name("native", latest))
-    return f"curl -fL -o {asset} \\\n  {url}"
+    return NATIVE_INSTALL_HINT
 
 
 def format_update_dialog_body(info: dict[str, Any]) -> str:
@@ -292,9 +279,7 @@ def _snippet(body: str | None) -> str:
 
 
 def _asset_name(channel: Channel, version: str) -> str:
-    if channel == "flatpak":
-        return FLATPAK_ASSET
-    return NATIVE_ASSET_TMPL.format(version=version)
+    return FLATPAK_ASSET
 
 
 def _asset_url(item: dict[str, Any], version: str, channel: Channel) -> str:
@@ -315,10 +300,10 @@ def _asset_url(item: dict[str, Any], version: str, channel: Channel) -> str:
 
 
 def check_for_update(*, raise_on_error: bool = False) -> dict[str, Any] | None:
-    """Return latest newer Gest release for the active channel, or None."""
+    """Return latest newer Hub Réseau release for the active channel, or None."""
     channel = update_channel()
-    api = FLATPAK_RELEASES_API if channel == "flatpak" else NATIVE_RELEASES_API
-    public = FLATPAK_PUBLIC_RELEASES if channel == "flatpak" else NATIVE_PUBLIC_RELEASES
+    api = FLATPAK_RELEASES_API
+    public = FLATPAK_PUBLIC_RELEASES
     try:
         payload = _http_json(api)
     except urllib.error.HTTPError as exc:
@@ -366,9 +351,7 @@ def check_for_update(*, raise_on_error: bool = False) -> dict[str, Any] | None:
             url = _require_allowed_url(url, kind="download")
         except UpdateError:
             continue
-        if channel == "native" and not url.split("?", 1)[0].endswith(".tar.gz"):
-            continue
-        if channel == "flatpak" and not url.split("?", 1)[0].endswith(".flatpak"):
+        if not url.split("?", 1)[0].endswith(".flatpak"):
             continue
         best_tuple = parsed
         best = {
@@ -444,56 +427,11 @@ def install_flatpak_bundle(path: Path) -> None:
     raise UpdateError(err)
 
 
-def _find_extract_root(extract_dir: Path) -> Path:
-    children = [p for p in extract_dir.iterdir() if p.is_dir()]
-    for child in children:
-        if (child / "install.sh").is_file() and (child / "main.py").is_file():
-            return child
-    if (extract_dir / "install.sh").is_file() and (extract_dir / "main.py").is_file():
-        return extract_dir
-    raise UpdateError("Archive native invalide : install.sh / main.py introuvables")
-
-
-def install_native_tarball(path: Path) -> None:
-    archive = path.expanduser().resolve()
-    if not archive.is_file():
-        raise UpdateError(f"Archive introuvable : {archive}")
-    # Extract outside the live install tree — rsync --delete into
-    # ~/.local/share/hub-reseau would delete a nested source mid-copy.
-    work = Path(tempfile.mkdtemp(prefix="gest-update-"))
-    try:
-        try:
-            with tarfile.open(archive, "r:gz") as tar:
-                # Python 3.12+: refuse suspicious members when available.
-                extract_kw: dict[str, Any] = {}
-                if hasattr(tarfile, "data_filter"):
-                    extract_kw["filter"] = "data"
-                tar.extractall(work, **extract_kw)
-        except (tarfile.TarError, OSError) as exc:
-            raise UpdateError(f"Extraction impossible : {exc}") from exc
-        root = _find_extract_root(work)
-        install_sh = root / "install.sh"
-        completed = host.run(
-            ["bash", str(install_sh), "--skip-deps"],
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=300,
-            cwd=str(root),
-        )
-        if completed.returncode != 0:
-            err = (completed.stderr or completed.stdout or "install.sh a échoué").strip()
-            raise UpdateError(err)
-    finally:
-        shutil.rmtree(work, ignore_errors=True)
-
-
 def install_bundle(path: Path, channel: Channel | None = None) -> None:
     ch = channel or update_channel()
-    if ch == "flatpak":
-        install_flatpak_bundle(path)
-    else:
-        install_native_tarball(path)
+    if ch != "flatpak":
+        raise UpdateError(NATIVE_INSTALL_HINT)
+    install_flatpak_bundle(path)
 
 
 def apply_update(info: dict[str, Any]) -> Path:
@@ -607,25 +545,36 @@ def write_check_report_script(
 
 def write_update_script(info: dict[str, Any]) -> Path:
     """Write a visible bash updater that downloads, installs, then relaunches."""
-    url = _require_allowed_url(str(info.get("download_url") or "").strip(), kind="download")
     channel: Channel = "flatpak"
     raw_ch = str(info.get("channel") or update_channel())
     if raw_ch in ("flatpak", "native"):
         channel = raw_ch  # type: ignore[assignment]
     version = str(info.get("version") or "?").strip() or "?"
+    script = updates_dir() / "run-update.sh"
+    if channel != "flatpak":
+        body = f"""#!/usr/bin/env bash
+set -euo pipefail
+echo "=========================================="
+echo " Hub Réseau — installation native"
+echo "=========================================="
+echo
+echo "{NATIVE_INSTALL_HINT}"
+echo
+echo "Relancez ensuite : hub-reseau"
+"""
+        script.write_text(body, encoding="utf-8")
+        script.chmod(0o755)
+        return script
+
+    url = _require_allowed_url(str(info.get("download_url") or "").strip(), kind="download")
     if parse_semver(version) is None:
         raise UpdateError("Version de mise à jour invalide")
     dest = updates_dir() / _asset_name(channel, version)
     shortcut_dest = updates_dir() / SHORTCUT_ASSET
-    script = updates_dir() / "run-update.sh"
-    # /tmp — never extract under ~/.local/share/hub-reseau (rsync self-delete).
-    work = Path(tempfile.gettempdir()) / f"gest-update-{version}"
     download = _shell_download_cmd(url, dest)
     shortcut_url = SHORTCUT_DIRECT.format(version=version)
     download_shortcut = _shell_download_cmd(shortcut_url, shortcut_dest)
-
-    if channel == "flatpak":
-        body = f"""#!/usr/bin/env bash
+    body = f"""#!/usr/bin/env bash
 set -euo pipefail
 echo "=========================================="
 echo " Hub Réseau — mise à jour Flatpak {version}"
@@ -648,45 +597,6 @@ echo
 echo "OK — Hub Réseau {version} installé."
 echo "Vous pouvez fermer ce terminal."
 """
-    else:
-        body = f"""#!/usr/bin/env bash
-set -euo pipefail
-echo "=========================================="
-echo " Hub Réseau — mise à jour native {version}"
-echo "=========================================="
-echo
-echo "==> Téléchargement…"
-{download}
-echo
-echo "==> Extraction…"
-rm -rf {_shell_quote(str(work))}
-mkdir -p {_shell_quote(str(work))}
-tar -xzf {_shell_quote(str(dest))} -C {_shell_quote(str(work))}
-ROOT="$(find {_shell_quote(str(work))} -maxdepth 2 -type f -name install.sh | head -n1 | xargs -r dirname)"
-if [[ -z "${{ROOT}}" || ! -f "${{ROOT}}/install.sh" ]]; then
-  echo "ERREUR : install.sh introuvable dans l'archive." >&2
-  exit 1
-fi
-echo "==> Installation (install.sh --skip-deps)…"
-bash "${{ROOT}}/install.sh" --skip-deps
-rm -rf {_shell_quote(str(work))}
-echo
-echo "==> Relance de l'application…"
-if command -v hub-reseau >/dev/null 2>&1; then
-  nohup hub-reseau >/dev/null 2>&1 &
-elif [[ -x "$HOME/.local/bin/hub-reseau" ]]; then
-  nohup "$HOME/.local/bin/hub-reseau" >/dev/null 2>&1 &
-elif [[ -f "$HOME/.local/share/hub-reseau/LANCER.sh" ]]; then
-  nohup bash "$HOME/.local/share/hub-reseau/LANCER.sh" >/dev/null 2>&1 &
-else
-  echo "ATTENTION : lanceur introuvable — relancez manuellement hub-reseau."
-fi
-sleep 1
-echo
-echo "OK — Hub Réseau {version} installé."
-echo "Vous pouvez fermer ce terminal."
-"""
-
     script.write_text(body, encoding="utf-8")
     script.chmod(0o755)
     return script
@@ -720,9 +630,6 @@ def _maybe_host(cmd: list[str]) -> list[str]:
 
 def open_terminal_script(script: Path) -> None:
     """Open Konsole (or another terminal) running the script; do not wait for exit."""
-    import subprocess
-    import time
-
     last_err = "aucun terminal trouvé"
     for cmd in _terminal_commands(script):
         wrapped = _maybe_host(cmd)

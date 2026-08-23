@@ -39,6 +39,7 @@ class AdapterSnapshot:
     gateway: str = ""
     default_iface: str = ""
     dns: list[str] = field(default_factory=list)
+    dns_stub: list[str] = field(default_factory=list)
 
 
 def parse_addr_json(text: str) -> list[Adapter]:
@@ -121,6 +122,35 @@ def parse_resolv_conf(text: str) -> list[str]:
     return servers[:8]
 
 
+def parse_resolvectl_dns(text: str) -> list[str]:
+    servers: list[str] = []
+    for line in (text or "").splitlines():
+        if ":" not in line:
+            continue
+        _left, right = line.split(":", 1)
+        for token in right.split():
+            token = token.strip().strip(",")
+            if not token or token.startswith("%"):
+                continue
+            if token not in servers:
+                servers.append(token)
+    return servers[:8]
+
+
+def _is_stub_dns(address: str) -> bool:
+    return address.startswith("127.") or address == "::1"
+
+
+def merge_dns(resolv: list[str], upstream: list[str]) -> tuple[list[str], list[str]]:
+    stub = [item for item in resolv if _is_stub_dns(item)]
+    real = [item for item in resolv if not _is_stub_dns(item)]
+    if upstream:
+        return upstream[:8], stub
+    if real:
+        return real[:8], stub
+    return resolv[:8], []
+
+
 def parse_netdev(text: str) -> dict[str, tuple[int, int]]:
     out: dict[str, tuple[int, int]] = {}
     for line in (text or "").splitlines():
@@ -187,11 +217,30 @@ def _ip_json(args: list[str]) -> str:
     return completed.stdout or "[]"
 
 
+def _resolvectl_text() -> str:
+    if host.which("resolvectl") is None:
+        return ""
+    try:
+        completed = host.run(
+            ["resolvectl", "dns"],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+    except (OSError, TimeoutError):
+        return ""
+    if completed.returncode != 0:
+        return ""
+    return completed.stdout or ""
+
+
 def collect_snapshot(
     *,
     addr_json: str | None = None,
     route_json: str | None = None,
     resolv_text: str | None = None,
+    resolvectl_text: str | None = None,
     netdev_text: str | None = None,
     prev_counters: dict[str, tuple[int, int]] | None = None,
     elapsed: float = 0.0,
@@ -200,7 +249,12 @@ def collect_snapshot(
     route = parse_default_route(
         route_json if route_json is not None else _ip_json(["route", "show", "default"])
     )
-    dns = parse_resolv_conf(resolv_text if resolv_text is not None else _read_text("/etc/resolv.conf"))
+    resolv = parse_resolv_conf(resolv_text if resolv_text is not None else _read_text("/etc/resolv.conf"))
+    if resolvectl_text is None:
+        upstream = parse_resolvectl_dns(_resolvectl_text())
+    else:
+        upstream = parse_resolvectl_dns(resolvectl_text)
+    dns, dns_stub = merge_dns(resolv, upstream)
     counters = parse_netdev(netdev_text if netdev_text is not None else _read_text("/proc/net/dev"))
     rates = rates_from_samples(prev_counters or {}, counters, elapsed) if prev_counters else {}
     for row in rows:
@@ -213,6 +267,7 @@ def collect_snapshot(
         gateway=route.gateway if route else "",
         default_iface=route.iface if route else "",
         dns=dns,
+        dns_stub=dns_stub,
     )
 
 

@@ -348,7 +348,16 @@ def refresh_adapters(win: Any, *, show_spinner: bool = False) -> None:
             if snap.default_iface:
                 bits.append(i18n.t("adapters_via", iface=snap.default_iface))
         if snap.dns:
-            bits.append(i18n.t("adapters_dns", servers=", ".join(snap.dns)))
+            if snap.dns_stub:
+                bits.append(
+                    i18n.t(
+                        "adapters_dns_stub",
+                        servers=", ".join(snap.dns),
+                        stub=", ".join(snap.dns_stub),
+                    )
+                )
+            else:
+                bits.append(i18n.t("adapters_dns", servers=", ".join(snap.dns)))
         win._adapters_summary.set_text(" · ".join(bits) if bits else "—")
         _clear_listbox(win._adapters_list)
         rows = [row for row in snap.adapters if not row.name.startswith("veth")]

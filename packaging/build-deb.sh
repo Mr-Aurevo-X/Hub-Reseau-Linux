@@ -71,7 +71,7 @@ cat > "${DEB_ROOT}/usr/share/applications/hub-reseau.desktop" << 'DESK'
 Type=Application
 Version=1.0
 Name=Hub Réseau
-Comment=Gestion systeme Linux (monitoring, services, nettoyeur)
+Comment=Hub réseau local : interfaces, parc, scan LAN, diagnostic, VPN
 Exec=/usr/bin/hub-reseau
 Path=/opt/hub-reseau
 Icon=utilities-system-monitor
@@ -83,7 +83,7 @@ DESK
 {
   echo "Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/"
   echo "Upstream-Name: Hub Réseau"
-  echo "Source: https://github.com/Mr-Aurevo-X/Hub-Reseau"
+  echo "Source: https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux"
   echo
   echo "Files: *"
   echo "Copyright: 2026 Mr-Aurevo-X"
