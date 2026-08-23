@@ -10,6 +10,7 @@ PAGE_KEYS: tuple[str, ...] = (
     "home",
     "network",
     "fleet",
+    "lan_scan",
     "network_diag",
     "vpn",
 )
@@ -18,6 +19,7 @@ _BUILD_ATTR = {
     "home": "_build_home_page",
     "network": "_build_network_page",
     "fleet": "_build_fleet",
+    "lan_scan": "_build_lan_scan_page",
     "network_diag": "_build_network_diag_page",
     "vpn": "_build_vpn_page",
 }

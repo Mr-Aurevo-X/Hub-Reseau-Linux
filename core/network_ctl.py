@@ -4,9 +4,10 @@
 from __future__ import annotations
 
 import re
-import shutil
 import subprocess
 from typing import Any
+
+from core import host
 
 
 class NetworkCtlError(Exception):
@@ -14,11 +15,11 @@ class NetworkCtlError(Exception):
 
 
 def _run(cmd: list[str], *, timeout: float = 30.0) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, check=False, capture_output=True, text=True, timeout=timeout)
+    return host.run(cmd, check=False, capture_output=True, text=True, timeout=timeout)
 
 
 def wifi_status() -> dict[str, Any]:
-    if shutil.which("nmcli") is None:
+    if host.which("nmcli") is None:
         return {"available": False, "enabled": False, "connections": [], "message": "nmcli introuvable"}
     try:
         radio = _run(["nmcli", "radio", "wifi"])
@@ -42,8 +43,17 @@ def wifi_status() -> dict[str, Any]:
         return {"available": True, "enabled": False, "connections": [], "message": str(exc)}
 
 
+def wifi_rescan() -> dict[str, Any]:
+    if host.which("nmcli") is None:
+        raise NetworkCtlError("nmcli introuvable")
+    completed = _run(["nmcli", "dev", "wifi", "rescan"], timeout=30.0)
+    if completed.returncode != 0:
+        raise NetworkCtlError((completed.stderr or completed.stdout or "échec rescan").strip())
+    return wifi_status()
+
+
 def set_wifi_enabled(enabled: bool) -> None:
-    if shutil.which("nmcli") is None:
+    if host.which("nmcli") is None:
         raise NetworkCtlError("nmcli introuvable")
     value = "on" if enabled else "off"
     completed = _run(["nmcli", "radio", "wifi", value])
@@ -63,7 +73,7 @@ def _validate_ssid(ssid: str) -> str:
 
 def wifi_connect(ssid: str, password: str | None = None) -> None:
     """Connect to ``ssid`` (optionally with WPA password)."""
-    if shutil.which("nmcli") is None:
+    if host.which("nmcli") is None:
         raise NetworkCtlError("nmcli introuvable")
     name = _validate_ssid(ssid)
     if password:
@@ -87,7 +97,7 @@ def wifi_connect(ssid: str, password: str | None = None) -> None:
 
 def wifi_forget(ssid: str) -> None:
     """Delete saved connection matching SSID (best-effort via nmcli)."""
-    if shutil.which("nmcli") is None:
+    if host.which("nmcli") is None:
         raise NetworkCtlError("nmcli introuvable")
     name = _validate_ssid(ssid)
     # List connections and delete matching name
@@ -109,7 +119,7 @@ def wifi_forget(ssid: str) -> None:
 
 
 def bluetooth_status() -> dict[str, Any]:
-    if shutil.which("bluetoothctl") is None:
+    if host.which("bluetoothctl") is None:
         return {"available": False, "powered": False, "devices": [], "message": "bluetoothctl introuvable"}
     try:
         show = _run(["bluetoothctl", "show"])
@@ -127,7 +137,7 @@ def bluetooth_status() -> dict[str, Any]:
 
 
 def set_bluetooth_powered(powered: bool) -> None:
-    if shutil.which("bluetoothctl") is None:
+    if host.which("bluetoothctl") is None:
         raise NetworkCtlError("bluetoothctl introuvable")
     value = "on" if powered else "off"
     completed = _run(["bluetoothctl", "power", value])

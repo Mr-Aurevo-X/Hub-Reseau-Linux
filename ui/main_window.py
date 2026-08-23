@@ -215,6 +215,14 @@ class MainWindow(Adw.ApplicationWindow):
             self._refresh_network(show_spinner=True)
         elif key == "home":
             self._refresh_home()
+        elif key == "lan_scan":
+            from ui.pages import scan_page
+
+            scan_page.refresh(self)
+        elif key == "vpn":
+            reload_vpn = getattr(self, "_vpn_reload", None)
+            if callable(reload_vpn):
+                reload_vpn()
         elif key == "network_diag":
             reload_diag = getattr(self, "_network_diag_reload", None)
             if callable(reload_diag):
@@ -551,6 +559,11 @@ class MainWindow(Adw.ApplicationWindow):
         from ui.pages import fleet as fleet_page
 
         return fleet_page.build(self)
+
+    def _build_lan_scan_page(self) -> Gtk.Widget:
+        from ui.pages import scan_page
+
+        return scan_page.build(self)
 
     def _build_vpn_page(self) -> Gtk.Widget:
         from ui.pages import vpn_page
@@ -1387,10 +1400,13 @@ class MainWindow(Adw.ApplicationWindow):
         self._network_spinner.set_visible(False)
         refresh_btn = Gtk.Button.new_from_icon_name("view-refresh-symbolic")
         refresh_btn.connect("clicked", lambda *_: self._refresh_network(show_spinner=True))
+        scan_btn = Gtk.Button(label=i18n.t("wifi_scan"))
+        scan_btn.connect("clicked", lambda *_: self._rescan_wifi())
         allow_btn = Gtk.Button(label=i18n.t("conn_allowlist_add"))
         allow_btn.connect("clicked", lambda *_: self._open_allowlist_dialog())
         bar.append(title)
         bar.append(self._network_spinner)
+        bar.append(scan_btn)
         bar.append(allow_btn)
         bar.append(refresh_btn)
         root.append(bar)
@@ -1512,7 +1528,7 @@ class MainWindow(Adw.ApplicationWindow):
                 show_toast(self._toast_overlay, str(error))
                 self._refresh_network()
                 return
-            show_toast(self._toast_overlay, f"Wi-Fi {'activé' if enabled else 'désactivé'}")
+            show_toast(self._toast_overlay, i18n.t("wifi_on" if enabled else "wifi_off"))
             self._refresh_network()
 
         run_in_thread(work, done)
@@ -1532,8 +1548,26 @@ class MainWindow(Adw.ApplicationWindow):
                 show_toast(self._toast_overlay, str(error))
                 self._refresh_network()
                 return
-            show_toast(self._toast_overlay, f"Bluetooth {'activé' if powered else 'désactivé'}")
+            show_toast(self._toast_overlay, i18n.t("bt_on" if powered else "bt_off"))
             self._refresh_network()
+
+        run_in_thread(work, done)
+
+    def _rescan_wifi(self) -> None:
+        self._set_busy(True)
+        if hasattr(self, "_network_spinner"):
+            self._network_spinner.set_visible(True)
+
+        def work() -> dict[str, Any]:
+            return network_ctl.wifi_rescan()
+
+        def done(_result: Any, error: BaseException | None) -> None:
+            self._set_busy(False)
+            if hasattr(self, "_network_spinner"):
+                self._network_spinner.set_visible(False)
+            if error is not None:
+                show_toast(self._toast_overlay, str(error))
+            self._refresh_network(show_spinner=True)
 
         run_in_thread(work, done)
 
@@ -2476,7 +2510,12 @@ class MainWindow(Adw.ApplicationWindow):
         self._refresh_home = reload_home
         box.append(listbox)
         actions = Gtk.Box(spacing=8)
-        for key, label_key in (("network", "network"), ("fleet", "fleet"), ("network_diag", "network_diag")):
+        for key, label_key in (
+            ("network", "network"),
+            ("fleet", "fleet"),
+            ("lan_scan", "lan_scan"),
+            ("network_diag", "network_diag"),
+        ):
             btn = Gtk.Button(label=i18n.t(label_key))
             btn.connect("clicked", lambda *_a, k=key: self._show_page(k))
             actions.append(btn)
@@ -2490,6 +2529,8 @@ class MainWindow(Adw.ApplicationWindow):
         box.set_margin_top(16)
         box.set_margin_start(16)
         box.set_margin_end(16)
+        title = Gtk.Label(label=i18n.t("network_diag"), xalign=0)
+        title.add_css_class("title-1")
         host_row = Gtk.Box(spacing=8)
         host_entry = Gtk.Entry(placeholder_text="1.1.1.1")
         host_entry.set_text("1.1.1.1")
@@ -2499,35 +2540,70 @@ class MainWindow(Adw.ApplicationWindow):
         host_row.append(host_entry)
         host_row.append(refresh)
         host_row.append(export_btn)
+        status = Gtk.Label(label="", xalign=0, wrap=True)
+        status.add_css_class("dim-label")
         listbox = Gtk.ListBox()
         listbox.add_css_class("boxed-list")
 
-        def reload() -> None:
+        def fill_lines(lines: list[str]) -> None:
             while (row := listbox.get_row_at_index(0)) is not None:
                 listbox.remove(row)
-            target = host_entry.get_text().strip() or "1.1.1.1"
-            for line in network_diag.quick_report(target):
+            for line in lines:
                 row = Gtk.ListBoxRow()
                 row.set_child(Gtk.Label(label=line, xalign=0, wrap=True))
                 listbox.append(row)
 
-        def export_to_clipboard() -> None:
+        def reload() -> None:
             target = host_entry.get_text().strip() or "1.1.1.1"
-            text = network_diag.export_report(target)
-            display = Gdk.Display.get_default() if hasattr(Gdk, "Display") else None
-            getter = getattr(display, "get_clipboard", None) if display is not None else None
-            clipboard = getter() if callable(getter) else None
-            setter = getattr(clipboard, "set", None)
-            if not callable(setter):
-                show_toast(self._toast_overlay, i18n.t("conn_no_clipboard"))
-                return
-            setter(text)
-            show_toast(self._toast_overlay, i18n.t("machine_copied"))
+            status.set_text(i18n.t("diag_running"))
+            self._set_busy(True)
+
+            def work() -> list[str]:
+                return network_diag.quick_report(target)
+
+            def done(result: Any, error: BaseException | None) -> None:
+                self._set_busy(False)
+                if error is not None:
+                    status.set_text(str(error))
+                    show_toast(self._toast_overlay, str(error))
+                    return
+                status.set_text("")
+                fill_lines(list(result or []))
+
+            run_in_thread(work, done)
+
+        def export_report() -> None:
+            target = host_entry.get_text().strip() or "1.1.1.1"
+            self._set_busy(True)
+
+            def work() -> tuple[str, Path]:
+                text = network_diag.export_report(target)
+                path = network_diag.write_export(target, text=text)
+                return text, path
+
+            def done(result: Any, error: BaseException | None) -> None:
+                self._set_busy(False)
+                if error is not None:
+                    show_toast(self._toast_overlay, str(error))
+                    return
+                text, path = result
+                display = Gdk.Display.get_default() if hasattr(Gdk, "Display") else None
+                getter = getattr(display, "get_clipboard", None) if display is not None else None
+                clipboard = getter() if callable(getter) else None
+                setter = getattr(clipboard, "set", None)
+                if callable(setter):
+                    setter(text)
+                    show_toast(self._toast_overlay, i18n.t("diag_copied"))
+                show_toast(self._toast_overlay, i18n.t("diag_exported", path=str(path)))
+
+            run_in_thread(work, done)
 
         refresh.connect("clicked", lambda *_: reload())
-        export_btn.connect("clicked", lambda *_: export_to_clipboard())
+        export_btn.connect("clicked", lambda *_: export_report())
         self._network_diag_reload = reload
+        box.append(title)
         box.append(host_row)
+        box.append(status)
         box.append(Gtk.ScrolledWindow(vexpand=True, child=listbox))
         reload()
         return box

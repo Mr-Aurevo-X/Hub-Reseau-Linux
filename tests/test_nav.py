@@ -21,6 +21,7 @@ def test_group_for_known_pages() -> None:
     assert group_for_page("home") == "home"
     assert group_for_page("network") == "network"
     assert group_for_page("fleet") == "network"
+    assert group_for_page("lan_scan") == "network"
     assert group_for_page("network_diag") == "network"
     assert group_for_page("vpn") == "network"
 
@@ -28,5 +29,6 @@ def test_group_for_known_pages() -> None:
 def test_flat_nav_starts_with_home() -> None:
     keys = [item[0] for item in flat_nav_items()]
     assert keys[0] == "home"
+    assert "lan_scan" in keys
     assert "network_diag" in keys
     assert "vpn" in keys

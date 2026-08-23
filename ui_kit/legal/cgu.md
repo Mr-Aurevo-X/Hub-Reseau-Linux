@@ -6,7 +6,7 @@ Licence : GNU GPL-3.0-or-later
 
 ## 1. Objet
 
-Hub Réseau est une application de bureau Linux (GTK 4 / libadwaita). **Local-first** : pas de télémétrie. Une lecture GitHub (versions) peut partir au démarrage si l'option Préférences est activée (défaut : oui). Les pages Diag et Parc envoient du trafic réseau — voir RGPD.
+Hub Réseau est une application de bureau Linux (GTK 4 / libadwaita). **Local-first** : pas de télémétrie. Une lecture GitHub (versions) peut partir au démarrage si l'option Préférences est activée (défaut : oui). Les pages Diag, Scan, Parc et VPN envoient ou relaient du trafic réseau local — voir RGPD.
 
 ## 2. Licence
 
@@ -18,7 +18,7 @@ Le logiciel est livré autonome. L'éditeur n'a aucune obligation de versions fu
 
 ## 4. Responsabilité
 
-Logiciel fourni **en l'état**. Vous assumez les sondes, pings et diagnostics que vous déclenchez (LAN ou Internet).
+Logiciel fourni **en l'état**. Vous assumez les sondes, pings, scans LAN et diagnostics que vous déclenchez (LAN ou Internet), ainsi que l'activation des profils VPN existants.
 
 ## 5. Soutien facultatif
 

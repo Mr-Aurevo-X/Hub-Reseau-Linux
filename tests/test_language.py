@@ -56,6 +56,7 @@ def test_nav_includes_home_and_fleet() -> None:
         keys = [item[0] for item in i18n.nav_items()]
         assert keys[0] == "home"
         assert "fleet" in keys
+        assert "lan_scan" in keys
         assert "network_diag" in keys
         assert "vpn" in keys
         assert i18n.t("fleet") == "Parc"

@@ -7,7 +7,7 @@
 
 ## Français
 
-Interfaces, flotte, diagnostic réseau. Repo Linux dédié — pas le hub Réseau PC Command.
+Interfaces, flotte, scan LAN, diagnostic et VPN. Repo Linux dédié — pas le hub Réseau PC Command.
 
 - **GitHub** : `Mr-Aurevo-X/Hub-Reseau-Linux` (privé)
 - **Plateforme** : voir [linux-platform](https://github.com/Mr-Aurevo-X/linux-platform)
@@ -34,7 +34,7 @@ Local-first, pas de télémétrie. Vérif. GitHub au démarrage (désactivable).
 
 ## English
 
-Interfaces, fleet, network diagnostics. Dedicated Linux repo — not the PC Command Network hub.
+Interfaces, fleet, LAN scan, diagnostics, and VPN. Dedicated Linux repo — not the PC Command Network hub.
 
 - **GitHub**: `Mr-Aurevo-X/Hub-Reseau-Linux` (private)
 - **Platform**: see [linux-platform](https://github.com/Mr-Aurevo-X/linux-platform)

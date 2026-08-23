@@ -18,7 +18,7 @@ from typing import Any
 
 from core import host, settings as app_settings
 
-MAX_MACHINES = 12
+MAX_MACHINES = 32
 PROBES = ("tcp:22", "tcp:3389", "tcp:445", "icmp")
 _UNSAFE = re.compile(r"[;&|`$<>(){}\\!#\s]")
 _HOSTNAME = re.compile(
