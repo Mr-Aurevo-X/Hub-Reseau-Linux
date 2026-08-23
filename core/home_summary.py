@@ -17,17 +17,20 @@ def summary_lines() -> list[str]:
         lines.append(i18n.t("diag_hostname", name=str(exc)))
 
     wifi = network_ctl.wifi_status()
-    if wifi.get("available"):
-        state = i18n.t("wifi_state_on" if wifi.get("enabled") else "wifi_state_off")
+    if wifi.get("available") and wifi.get("enabled"):
         active = next((c for c in wifi.get("connections", []) if c.get("active")), None)
         if active:
             lines.append(
                 i18n.t("home_wifi", ssid=active.get("ssid") or "—", signal=active.get("signal") or "0")
             )
         else:
-            lines.append(i18n.t("home_wifi_state", state=state))
+            lines.append(i18n.t("home_wifi_state", state=i18n.t("wifi_state_on")))
+    elif wifi.get("available"):
+        lines.append(i18n.t("home_wifi_state", state=i18n.t("wifi_state_off")))
+    elif wifi.get("message"):
+        lines.append(str(wifi.get("message")))
     else:
-        lines.append(str(wifi.get("message") or i18n.t("home_wifi_missing")))
+        lines.append(i18n.t("wifi_hw_missing"))
 
     try:
         data = fleet.load_fleet()

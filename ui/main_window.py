@@ -1589,9 +1589,16 @@ class MainWindow(Adw.ApplicationWindow):
             wifi, bt = result
             self._wifi_switch_guard = True
             self._wifi_switch_row.set_sensitive(bool(wifi.get("available")))
-            self._wifi_switch_row.set_active(bool(wifi.get("enabled")))
-            msg = wifi.get("message") or (i18n.t("available") if wifi.get("available") else i18n.t("unavailable"))
-            self._wifi_switch_row.set_subtitle(str(msg))
+            self._wifi_switch_row.set_active(bool(wifi.get("available") and wifi.get("enabled")))
+            if wifi.get("message"):
+                wifi_sub = str(wifi.get("message"))
+            elif not wifi.get("available"):
+                wifi_sub = i18n.t("unavailable")
+            elif wifi.get("enabled"):
+                wifi_sub = i18n.t("available")
+            else:
+                wifi_sub = i18n.t("wifi_state_off")
+            self._wifi_switch_row.set_subtitle(wifi_sub)
             self._wifi_switch_guard = False
 
             self._clear_listbox(self._wifi_list)

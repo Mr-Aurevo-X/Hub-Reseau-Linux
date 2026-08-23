@@ -3,11 +3,15 @@
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 from typing import Any
 
 from core import host
+
+_WIFI_ON = frozenset({"enabled", "on", "yes", "activé", "active"})
+_WIFI_HW_ABSENT = frozenset({"", "missing", "unavailable", "absent"})
 
 
 class NetworkCtlError(Exception):
@@ -18,29 +22,77 @@ def _run(cmd: list[str], *, timeout: float = 30.0) -> subprocess.CompletedProces
     return host.run(cmd, check=False, capture_output=True, text=True, timeout=timeout)
 
 
+def _nmcli_c_env() -> dict[str, str]:
+    env = dict(os.environ)
+    env["LC_ALL"] = "C"
+    env["LANG"] = "C"
+    return env
+
+
+def parse_wifi_radio(text: str) -> tuple[bool, bool]:
+    """Return ``(available, enabled)`` from ``WIFI:WIFI-HW`` or ``nmcli radio wifi``."""
+    raw = (text or "").strip()
+    if not raw:
+        return False, False
+    line = raw.splitlines()[0].strip()
+    if ":" in line:
+        bits = [part.strip().lower() for part in line.split(":")]
+        wifi = bits[0] if bits else ""
+        hw = bits[1] if len(bits) > 1 else ""
+    else:
+        wifi = line.lower()
+        hw = "enabled"
+    enabled = wifi in _WIFI_ON
+    available = enabled or (hw not in _WIFI_HW_ABSENT)
+    return available, enabled
+
+
 def wifi_status() -> dict[str, Any]:
     if host.which("nmcli") is None:
         return {"available": False, "enabled": False, "connections": [], "message": "nmcli introuvable"}
     try:
-        radio = _run(["nmcli", "radio", "wifi"])
-        enabled = (radio.stdout or "").strip().lower() == "enabled"
-        lst = _run(["nmcli", "-t", "-f", "ACTIVE,SSID,SIGNAL,SECURITY", "dev", "wifi", "list"])
-        connections: list[dict[str, Any]] = []
-        for line in (lst.stdout or "").splitlines():
-            parts = line.split(":")
-            if len(parts) < 3:
-                continue
-            connections.append(
-                {
-                    "active": parts[0] == "yes",
-                    "ssid": parts[1],
-                    "signal": parts[2],
-                    "security": parts[3] if len(parts) > 3 else "",
-                }
+        general = host.run(
+            ["nmcli", "-t", "-f", "WIFI,WIFI-HW", "general"],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=15.0,
+            env=_nmcli_c_env(),
+        )
+        available, enabled = parse_wifi_radio(general.stdout or "")
+        if not (general.stdout or "").strip():
+            radio = host.run(
+                ["nmcli", "radio", "wifi"],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=15.0,
+                env=_nmcli_c_env(),
             )
-        return {"available": True, "enabled": enabled, "connections": connections[:30], "message": ""}
+            available, enabled = parse_wifi_radio(radio.stdout or "")
+        connections: list[dict[str, Any]] = []
+        if enabled:
+            lst = _run(["nmcli", "-t", "-f", "ACTIVE,SSID,SIGNAL,SECURITY", "dev", "wifi", "list"])
+            for line in (lst.stdout or "").splitlines():
+                parts = line.split(":")
+                if len(parts) < 3:
+                    continue
+                connections.append(
+                    {
+                        "active": parts[0] == "yes",
+                        "ssid": parts[1],
+                        "signal": parts[2],
+                        "security": parts[3] if len(parts) > 3 else "",
+                    }
+                )
+        return {
+            "available": available,
+            "enabled": enabled,
+            "connections": connections[:30],
+            "message": "",
+        }
     except (OSError, subprocess.TimeoutExpired) as exc:
-        return {"available": True, "enabled": False, "connections": [], "message": str(exc)}
+        return {"available": False, "enabled": False, "connections": [], "message": str(exc)}
 
 
 def wifi_rescan() -> dict[str, Any]:
