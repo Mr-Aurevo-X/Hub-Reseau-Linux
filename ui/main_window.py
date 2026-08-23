@@ -552,6 +552,11 @@ class MainWindow(Adw.ApplicationWindow):
 
         return fleet_page.build(self)
 
+    def _build_vpn_page(self) -> Gtk.Widget:
+        from ui.pages import vpn_page
+
+        return vpn_page.build(self)
+
     def _refresh_fleet(self, *, show_spinner: bool = False) -> None:
         from ui.pages import fleet as fleet_page
 
@@ -2490,8 +2495,10 @@ class MainWindow(Adw.ApplicationWindow):
         host_entry.set_text("1.1.1.1")
         host_entry.set_hexpand(True)
         refresh = Gtk.Button(label=i18n.t("refresh"))
+        export_btn = Gtk.Button(label=i18n.t("export"))
         host_row.append(host_entry)
         host_row.append(refresh)
+        host_row.append(export_btn)
         listbox = Gtk.ListBox()
         listbox.add_css_class("boxed-list")
 
@@ -2504,7 +2511,21 @@ class MainWindow(Adw.ApplicationWindow):
                 row.set_child(Gtk.Label(label=line, xalign=0, wrap=True))
                 listbox.append(row)
 
+        def export_to_clipboard() -> None:
+            target = host_entry.get_text().strip() or "1.1.1.1"
+            text = network_diag.export_report(target)
+            display = Gdk.Display.get_default() if hasattr(Gdk, "Display") else None
+            getter = getattr(display, "get_clipboard", None) if display is not None else None
+            clipboard = getter() if callable(getter) else None
+            setter = getattr(clipboard, "set", None)
+            if not callable(setter):
+                show_toast(self._toast_overlay, i18n.t("conn_no_clipboard"))
+                return
+            setter(text)
+            show_toast(self._toast_overlay, i18n.t("machine_copied"))
+
         refresh.connect("clicked", lambda *_: reload())
+        export_btn.connect("clicked", lambda *_: export_to_clipboard())
         self._network_diag_reload = reload
         box.append(host_row)
         box.append(Gtk.ScrolledWindow(vexpand=True, child=listbox))

@@ -40,6 +40,7 @@ def nav_groups() -> tuple[NavGroup, ...]:
                 NavPage("network", "network-wireless-symbolic"),
                 NavPage("fleet", "network-server-symbolic"),
                 NavPage("network_diag", "network-transmit-receive-symbolic"),
+                NavPage("vpn", "network-vpn-symbolic"),
             ),
         ),
     )
