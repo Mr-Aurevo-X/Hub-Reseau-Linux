@@ -37,6 +37,28 @@ def empty_store() -> dict[str, Any]:
     return {"version": 2, "machines": []}
 
 
+def machines_grouped(machines: list[dict[str, Any]]) -> list[tuple[str, list[dict[str, Any]]]]:
+    groups: dict[str, list[dict[str, Any]]] = {}
+    order: list[str] = []
+    for item in machines:
+        key = str(item.get("location") or "").strip()
+        if not key:
+            addr = str(item.get("address") or "")
+            try:
+                ip = ipaddress.ip_address(addr)
+                if isinstance(ip, ipaddress.IPv4Address):
+                    key = str(ipaddress.ip_network(f"{addr}/24", strict=False))
+                else:
+                    key = ""
+            except ValueError:
+                key = ""
+        if key not in groups:
+            groups[key] = []
+            order.append(key)
+        groups[key].append(item)
+    return [(key, groups[key]) for key in order]
+
+
 def fleet_path() -> Path:
     return app_settings.config_dir() / "fleet.json"
 
