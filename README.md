@@ -6,7 +6,7 @@
 Hub réseau **local-first** pour Linux (GTK 4 / libadwaita).  
 Interfaces, trafic, parc d’atelier, scan LAN privé, diagnostic à la demande, VPN / WireGuard NetworkManager.
 
-**1.3.0** — [releases](https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases)
+**1.3.1** — [releases](https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases)
 
 ---
 
