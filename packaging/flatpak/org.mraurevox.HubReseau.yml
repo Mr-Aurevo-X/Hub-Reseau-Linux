@@ -38,6 +38,8 @@ modules:
         ${FLATPAK_DEST}/share/applications/org.mraurevox.HubReseau.desktop
       - install -Dm644 packaging/flatpak/org.mraurevox.HubReseau.metainfo.xml
         ${FLATPAK_DEST}/share/metainfo/org.mraurevox.HubReseau.metainfo.xml
+      - install -Dm644 packaging/flatpak/org.mraurevox.HubReseau.svg
+        ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/org.mraurevox.HubReseau.svg
       - install -Dm644 packaging/flatpak/org.mraurevox.HubReseau.png
         ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/org.mraurevox.HubReseau.png
     sources:
