@@ -1,7 +1,7 @@
 # Hub Réseau
 
-> **WIP** — encore en développement. Pas une release publique.  
-> **WIP** — still in development. Not a public release.
+> **WIP** — encore en développement.  
+> **WIP** — still in development.
 
 Hub réseau **local-first** pour Linux (GTK 4 / libadwaita).  
 Interfaces, trafic, parc d’atelier, scan LAN privé, diagnostic à la demande, VPN / WireGuard NetworkManager.
