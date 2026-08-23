@@ -18,14 +18,13 @@ def test_flat_nav_unique_keys() -> None:
 
 
 def test_group_for_known_pages() -> None:
-    assert group_for_page("dashboard") == "system"
-    assert group_for_page("timers") == "runtime"
+    assert group_for_page("home") == "home"
+    assert group_for_page("network") == "network"
     assert group_for_page("fleet") == "network"
+    assert group_for_page("network_diag") == "network"
 
 
-def test_flat_nav_starts_with_dashboard_machine() -> None:
+def test_flat_nav_starts_with_home() -> None:
     keys = [item[0] for item in flat_nav_items()]
-    assert keys[0] == "dashboard"
-    assert keys[1] == "machine"
-    assert "fleet" in keys
-    assert "timers" in keys
+    assert keys[0] == "home"
+    assert "network_diag" in keys

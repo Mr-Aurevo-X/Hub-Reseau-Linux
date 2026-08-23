@@ -91,7 +91,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         self._monitor_stop = threading.Event()
         self._monitor_thread: threading.Thread | None = None
-        self._current_page = "dashboard"
+        self._current_page = "home"
         self._process_filter = ""
         self._service_filter = ""
         self._service_chip = "active"  # active | enabled | all
@@ -121,7 +121,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         self._build_ui()
         self._install_actions()
-        self._show_page("dashboard")
+        self._show_page("home")
         # Non-blocking first paint: start monitoring after the window is mapped.
         GLib.idle_add(self._start_monitoring)
         GLib.timeout_add(700, self._check_startup_compatibility)
@@ -244,6 +244,12 @@ class MainWindow(Adw.ApplicationWindow):
             self._refresh_backup(show_spinner=True)
         elif key == "sessions":
             self._refresh_sessions(show_spinner=True)
+        elif key == "home":
+            self._refresh_home()
+        elif key == "network_diag":
+            reload_diag = getattr(self, "_network_diag_reload", None)
+            if callable(reload_diag):
+                reload_diag()
 
     def _set_busy(self, busy: bool) -> None:
         self._busy_ops = max(0, self._busy_ops + (1 if busy else -1))
@@ -277,12 +283,12 @@ class MainWindow(Adw.ApplicationWindow):
 
         self._page_builders = ui_pages.builders_for(self)
         self._built_pages: set[str] = set()
-        self._ensure_page("dashboard")
+        self._ensure_page("home")
 
         layout = build_main_layout(
             nav_scroll,
             self._stack,
-            page_title=i18n.t("dashboard"),
+            page_title=page_titles().get("home", i18n.t("home")),
             lang=i18n.get_language(),
         )
         self._header_spinner = make_spinner(size=18)
@@ -307,7 +313,7 @@ class MainWindow(Adw.ApplicationWindow):
         )
         self._layout = layout
         self._toast_overlay.set_child(layout.widget)
-        self._nav_sidebar.select_page("dashboard", notify=False)
+        self._nav_sidebar.select_page("home", notify=False)
 
     def _ensure_page(self, key: str) -> Gtk.Widget:
         child = self._stack.get_child_by_name(key)
@@ -2997,6 +3003,8 @@ class MainWindow(Adw.ApplicationWindow):
         return False
 
     def _build_home_page(self) -> Gtk.Widget:
+        from core import home_summary
+
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         box.set_margin_top(24)
         box.set_margin_start(24)
@@ -3007,6 +3015,27 @@ class MainWindow(Adw.ApplicationWindow):
         lede.add_css_class("dim-label")
         box.append(title)
         box.append(lede)
+        listbox = Gtk.ListBox()
+        listbox.add_css_class("boxed-list")
+        self._home_summary_list = listbox
+
+        def reload_home() -> None:
+            while (row := listbox.get_row_at_index(0)) is not None:
+                listbox.remove(row)
+            for line in home_summary.summary_lines():
+                row = Gtk.ListBoxRow()
+                row.set_child(Gtk.Label(label=line, xalign=0, wrap=True))
+                listbox.append(row)
+
+        reload_home()
+        self._refresh_home = reload_home
+        box.append(listbox)
+        actions = Gtk.Box(spacing=8)
+        for key, label_key in (("network", "network"), ("fleet", "fleet"), ("network_diag", "network_diag")):
+            btn = Gtk.Button(label=i18n.t(label_key))
+            btn.connect("clicked", lambda *_a, k=key: self._show_page(k))
+            actions.append(btn)
+        box.append(actions)
         return box
 
     def _build_network_diag_page(self) -> Gtk.Widget:
@@ -3016,20 +3045,28 @@ class MainWindow(Adw.ApplicationWindow):
         box.set_margin_top(16)
         box.set_margin_start(16)
         box.set_margin_end(16)
+        host_row = Gtk.Box(spacing=8)
+        host_entry = Gtk.Entry(placeholder_text="1.1.1.1")
+        host_entry.set_text("1.1.1.1")
+        host_entry.set_hexpand(True)
         refresh = Gtk.Button(label=i18n.t("refresh"))
+        host_row.append(host_entry)
+        host_row.append(refresh)
         listbox = Gtk.ListBox()
         listbox.add_css_class("boxed-list")
 
         def reload() -> None:
             while (row := listbox.get_row_at_index(0)) is not None:
                 listbox.remove(row)
-            for line in network_diag.quick_report():
+            target = host_entry.get_text().strip() or "1.1.1.1"
+            for line in network_diag.quick_report(target):
                 row = Gtk.ListBoxRow()
                 row.set_child(Gtk.Label(label=line, xalign=0, wrap=True))
                 listbox.append(row)
 
         refresh.connect("clicked", lambda *_: reload())
-        box.append(refresh)
+        self._network_diag_reload = reload
+        box.append(host_row)
         box.append(Gtk.ScrolledWindow(vexpand=True, child=listbox))
         reload()
         return box

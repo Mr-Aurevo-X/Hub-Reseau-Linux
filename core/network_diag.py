@@ -1,38 +1,67 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Minimal network diagnostics (ping/DNS placeholders)."""
+"""Extended network diagnostics."""
 
 from __future__ import annotations
 
+import re
 import shutil
 import socket
 import subprocess
+from typing import Any
 
 
-def quick_report() -> list[str]:
+def quick_report(host: str = "1.1.1.1") -> list[str]:
     lines: list[str] = []
     try:
-        host = socket.gethostname()
-        lines.append(f"Hostname: {host}")
+        lines.append(f"Hostname: {socket.gethostname()}")
     except OSError as exc:
-        lines.append(f"Hostname: erreur ({exc})")
+        lines.append(f"Hostname: {exc}")
+
+    target = (host or "1.1.1.1").strip() or "1.1.1.1"
     if shutil.which("ping"):
         try:
             out = subprocess.run(
-                ["ping", "-c", "1", "-W", "2", "1.1.1.1"],
+                ["ping", "-c", "1", "-W", "2", target],
                 capture_output=True,
                 text=True,
                 timeout=5,
                 check=False,
             )
-            ok = out.returncode == 0
-            lines.append(f"Ping 1.1.1.1: {'OK' if ok else 'échec'}")
+            lines.append(f"Ping {target}: {'OK' if out.returncode == 0 else 'échec'}")
         except (subprocess.SubprocessError, OSError) as exc:
             lines.append(f"Ping: {exc}")
     else:
         lines.append("Ping: commande indisponible")
-    try:
-        socket.getaddrinfo("github.com", 443)
-        lines.append("DNS github.com: OK")
-    except OSError as exc:
-        lines.append(f"DNS github.com: {exc}")
+
+    for domain in ("github.com", "flathub.org"):
+        try:
+            socket.getaddrinfo(domain, 443)
+            lines.append(f"DNS {domain}: OK")
+        except OSError as exc:
+            lines.append(f"DNS {domain}: {exc}")
+
+    lines.extend(_listening_ports())
     return lines
+
+
+def _listening_ports() -> list[str]:
+    if shutil.which("ss"):
+        try:
+            out = subprocess.run(
+                ["ss", "-tlnp"],
+                capture_output=True,
+                text=True,
+                timeout=4,
+                check=False,
+            )
+            rows = []
+            for line in (out.stdout or "").splitlines()[1:]:
+                if "127.0.0.1:" in line or "0.0.0.0:" in line or "[::]:" in line:
+                    rows.append(line.strip())
+                if len(rows) >= 8:
+                    break
+            if rows:
+                return ["Ports en écoute (extrait):"] + rows
+        except (subprocess.SubprocessError, OSError):
+            pass
+    return []
