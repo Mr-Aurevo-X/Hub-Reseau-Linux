@@ -1,48 +1,89 @@
-# Hub Réseau (Linux)
+# Hub Réseau
 
-> **Dépôt privé** — plateforme Linux Mr-Aurevo-X (GTK 4 + Uni-UI).  
-> **Private repo** — Mr-Aurevo-X Linux platform (GTK 4 + Uni-UI).
+Hub réseau **local-first** pour Linux (GTK 4 / libadwaita).  
+Interfaces, trafic, parc d’atelier, scan LAN privé, diagnostic à la demande, VPN / WireGuard NetworkManager.
+
+**1.3.0** — [releases](https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases)
 
 ---
 
 ## Français
 
-Interfaces, flotte, scan LAN, diagnostic et VPN. Repo Linux dédié — pas le hub Réseau PC Command.
+### Installer (Flatpak)
 
-- **GitHub** : `Mr-Aurevo-X/Hub-Reseau-Linux` (privé)
-- **Plateforme** : voir [linux-platform](https://github.com/Mr-Aurevo-X/linux-platform)
-
-## Installation / Install
+Prérequis : [Flatpak](https://flatpak.org/setup/) + runtime GNOME 49 (installé automatiquement depuis Flathub au premier `flatpak install`).
 
 ```bash
-flatpak install --user -y https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases/latest/download/org.mraurevox.HubReseau.flatpak
+wget -O org.mraurevox.HubReseau.flatpak \
+  https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases/latest/download/org.mraurevox.HubReseau.flatpak
+flatpak install --user -y --reinstall ./org.mraurevox.HubReseau.flatpak
+wget -O INSTALLER-RACCOURCI-FLATPAK.sh \
+  https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases/latest/download/INSTALLER-RACCOURCI-FLATPAK.sh
+bash ./INSTALLER-RACCOURCI-FLATPAK.sh
 flatpak run org.mraurevox.HubReseau
 ```
 
-Dev local :
+### Installer (natif, clone)
 
 ```bash
-bash LANCER.sh
+bash install.sh --skip-deps
+hub-reseau
 ```
 
+Dev sans installer : `bash LANCER.sh`
+
+### Ce que ça fait
+
+- Adaptateurs, route, DNS (stub systemd vs serveurs amont)
+- Wi-Fi / Bluetooth / table des connexions (`ss`)
+- Parc : machines que vous saisissez, sondes TCP / ICMP
+- Scan LAN **privé** (voisins, passerelle, MAC ; option ping /24)
+- Diagnostic à la demande (ping, DNS, traceroute / mtr)
+- VPN / WireGuard : activer ou couper un profil NetworkManager existant
+
+### Ce que ça ne fait pas
+
+Pas de nmap, pas de Wake-on-LAN, pas de création de profil VPN, pas de télémétrie, pas d’install automatique.  
+Pas de publication Flathub : le canal, c’est **cette** release GitHub.
 
 ### Confidentialité
 
-Local-first, pas de télémétrie. Vérif. GitHub au démarrage (désactivable). Diag / parc envoient du trafic. Pas d'install auto.
+Local-first. Données dans `~/.config/Mr-Aurevo-X/hubs/reseau/`.  
+Vérif. versions GitHub au démarrage (désactivable). Scan / diag / parc : trafic seulement quand vous cliquez.  
+Texte : [LEGAL.md](LEGAL.md) — dans l’app : mentions légales du kit.
 
 ---
 
 ## English
 
-Interfaces, fleet, LAN scan, diagnostics, and VPN. Dedicated Linux repo — not the PC Command Network hub.
+Local-first Linux network hub (GTK 4 / libadwaita): adapters, fleet, private LAN scan, on-demand diagnostics, NetworkManager VPN / WireGuard up/down.
 
-- **GitHub**: `Mr-Aurevo-X/Hub-Reseau-Linux` (private)
-- **Platform**: see [linux-platform](https://github.com/Mr-Aurevo-X/linux-platform)
+### Install (Flatpak)
 
-### Privacy
+```bash
+wget -O org.mraurevox.HubReseau.flatpak \
+  https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases/latest/download/org.mraurevox.HubReseau.flatpak
+flatpak install --user -y --reinstall ./org.mraurevox.HubReseau.flatpak
+wget -O INSTALLER-RACCOURCI-FLATPAK.sh \
+  https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases/latest/download/INSTALLER-RACCOURCI-FLATPAK.sh
+bash ./INSTALLER-RACCOURCI-FLATPAK.sh
+flatpak run org.mraurevox.HubReseau
+```
 
-Local-first, no telemetry. Startup GitHub check (can be disabled). Diag / fleet send traffic. No auto-install.
+### Install (native clone)
+
+```bash
+bash install.sh --skip-deps
+hub-reseau
+```
+
+Dev without install: `bash LANCER.sh`
+
+No nmap, no WOL, no VPN profile creation, no telemetry, no auto-install.  
+Not on Flathub — GitHub Releases only.
+
+Privacy: local-first. Data under `~/.config/Mr-Aurevo-X/hubs/reseau/`. Startup GitHub version check (can be disabled). See [LEGAL.md](LEGAL.md).
 
 ---
 
-Copyright © 2026 Mr-Aurevo-X
+Copyright © 2026 Mr-Aurevo-X — GPL-3.0-or-later

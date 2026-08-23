@@ -1,8 +1,8 @@
-# Flathub (futur)
+# Pas de Flathub
 
-Le canal utilisateur actuel est [Hub-Reseau-Linux/releases](https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases) (tag `vX.Y.Z` + `.flatpak` + `LEGAL.md`).
+Hub Réseau **n’est pas** et **ne sera pas** soumis à Flathub.
 
-## Prérequis Flathub (quand soumis)
+Le seul canal paquet : [Hub-Reseau-Linux/releases](https://github.com/Mr-Aurevo-X/Hub-Reseau-Linux/releases)  
+(tag `vX.Y.Z` + `org.mraurevox.HubReseau.flatpak` + `LEGAL.md` + raccourci).
 
-- `org.mraurevox.HubReseau.metainfo.xml` à jour
-- Screenshots 16:9 publics (URL stable sur `Hub-Reseau-Linux` ou CDN) — sans screenshot le bot Flathub refuse
+Le runtime **GNOME 49** vient de Flathub (dépendance Flatpak), pas l’app.
