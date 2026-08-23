@@ -18,10 +18,10 @@ Le code source est un logiciel libre sous licence [GPL-3.0-or-later](LICENSE).
 
 Mr-Aurevo-X **ne collecte aucune donnée personnelle**. Pas de compte, pas de télémétrie, pas de publicité, pas de revente.
 
-- Stockage local : `~/.config/Mr-Aurevo-X/hubs/reseau/` (préférences, parc).
+- Stockage local : `~/.config/Mr-Aurevo-X/hubs/reseau/` (préférences, parc, dernier scan).
 - **Vérif. versions au démarrage** (Préférences, activée par défaut, désactivable) : GET `api.github.com/repos/Mr-Aurevo-X/Hub-Reseau-Linux/releases` (lecture seule). GitHub peut voir IP / User-Agent selon **sa** politique.
 - **Connexions :** lecture locale de la table de sockets (`ss`). Adresses et ports restent sur votre disque. **Aucun envoi**, pas de reverse DNS, pas de réputation en ligne.
-- **Diag :** au chargement de la page (en arrière-plan), ping (défaut `1.1.1.1`), DNS (`github.com`, `flathub.org`) et traceroute / mtr depuis cette machine.
+- **Diag :** sur action uniquement (bouton Lancer), ping (défaut `1.1.1.1`), DNS (`github.com`, `flathub.org`) et traceroute / mtr depuis cette machine.
 - **Scan :** sur action, découverte du LAN **privé** (voisins `ip neigh` + ping `/24`, ports 22/80/443/3389/445). Pas de nmap, pas de sweep Internet.
 - **VPN / proxy :** lecture des profils NetworkManager (VPN / WireGuard) et variables de proxy. Activer / désactiver un profil existant (nmcli, pkexec si besoin). Aucune création de profil.
 - **Parc :** machines que **vous** saisissez (ou ajoutez depuis Scan). Sondes TCP / ICMP sur action. Pas de mot de passe stocké, pas d’agent distant.
@@ -51,10 +51,10 @@ Source code is free software under [GPL-3.0-or-later](LICENSE).
 
 Mr-Aurevo-X **collects no personal data**. No account, no telemetry, no ads, no resale.
 
-- Local storage: `~/.config/Mr-Aurevo-X/hubs/reseau/`
+- Local storage: `~/.config/Mr-Aurevo-X/hubs/reseau/` (preferences, fleet, last scan)
 - **Startup version check** (Preferences, on by default, can be disabled): GET `api.github.com/repos/Mr-Aurevo-X/Hub-Reseau-Linux/releases` (read-only). GitHub may see IP / User-Agent under **its** policy.
 - **Connections:** local read of this machine’s socket table (`ss`). No upload, no reverse DNS, no online reputation.
-- **Diag:** on page load (background thread), ping (default `1.1.1.1`), DNS (`github.com`, `flathub.org`), and traceroute / mtr from this machine.
+- **Diag:** on action only (Run), ping (default `1.1.1.1`), DNS (`github.com`, `flathub.org`), and traceroute / mtr from this machine.
 - **Scan:** on action, **private** LAN discovery (`ip neigh` + `/24` ping, ports 22/80/443/3389/445). No nmap, no Internet sweep.
 - **VPN / proxy:** read NetworkManager profiles (VPN / WireGuard) and proxy env vars. Activate / deactivate an existing profile (nmcli, pkexec if needed). No profile creation.
 - **Fleet:** machines **you** enter (or add from Scan). TCP / ICMP probes on action. No stored passwords, no remote agent.

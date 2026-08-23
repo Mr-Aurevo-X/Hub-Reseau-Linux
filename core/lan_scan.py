@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-from core import fleet, host
+from core import fleet, host, paths
 
 COMMON_PORTS: tuple[int, ...] = (22, 80, 443, 3389, 445)
 _MAX_PREFIX = 24
@@ -49,16 +49,19 @@ class ScanTarget:
 class Neighbor:
     ip: str
     source: str = "neigh"
+    mac: str = ""
 
 
 @dataclass
 class ScanHost:
     ip: str
     name: str = ""
+    mac: str = ""
     rtt_ms: float | None = None
     ports: list[int] = field(default_factory=list)
     sources: list[str] = field(default_factory=list)
     is_self: bool = False
+    is_gateway: bool = False
 
 
 def _as_ipv4(text: str) -> ipaddress.IPv4Address:
@@ -138,8 +141,58 @@ def parse_neighbors(text: str) -> list[Neighbor]:
         if key in seen:
             continue
         seen.add(key)
-        rows.append(Neighbor(ip=key, source="neigh"))
+        mac = ""
+        if "lladdr" in parts:
+            idx = parts.index("lladdr")
+            if idx + 1 < len(parts):
+                mac = parts[idx + 1]
+        rows.append(Neighbor(ip=key, source="neigh", mac=mac))
     return rows
+
+
+def last_scan_path() -> Path:
+    return paths.config_dir() / "last_scan.json"
+
+
+def save_last_scan(
+    hosts: list[ScanHost],
+    *,
+    neighbors_only: bool = False,
+    at: str | None = None,
+) -> Path:
+    stamp = at or time.strftime("%Y-%m-%dT%H:%M:%S")
+    payload = {
+        "version": 1,
+        "at": stamp,
+        "neighbors_only": bool(neighbors_only),
+        "count": len(hosts),
+        "hosts": [
+            {
+                "ip": item.ip,
+                "name": item.name,
+                "mac": item.mac,
+                "ports": list(item.ports),
+                "sources": list(item.sources),
+                "is_self": item.is_self,
+                "is_gateway": item.is_gateway,
+            }
+            for item in hosts
+        ],
+    }
+    path = last_scan_path()
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
+    return path
+
+
+def load_last_scan() -> dict[str, Any] | None:
+    path = last_scan_path()
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
 
 
 def _ip_addr_json() -> str:
@@ -258,6 +311,8 @@ def run_scan(
     cancel: threading.Event | None = None,
     on_progress: ProgressFn | None = None,
     resolve_name: NameFn | None = None,
+    neighbors_only: bool = False,
+    gateway_ip: str = "",
 ) -> list[ScanHost]:
     stop = cancel or threading.Event()
     ping = ping_fn or _default_ping
@@ -266,6 +321,7 @@ def run_scan(
     targets = local_targets(ip_json=ip_json)
     neighbors = parse_neighbors(neigh_text if neigh_text is not None else _ip_neigh_text())
     store: dict[str, ScanHost] = {}
+    gateway = (gateway_ip or "").strip()
 
     for target in targets:
         net = ipaddress.ip_network(target.network, strict=False)
@@ -285,6 +341,23 @@ def run_scan(
                 continue
             row = _ensure_host(store, neigh.ip)
             _add_source(row, "neigh")
+            if neigh.mac:
+                row.mac = neigh.mac
+
+        if gateway:
+            try:
+                gw_addr = ipaddress.ip_address(gateway)
+            except ValueError:
+                gw_addr = None
+            if gw_addr is not None and gw_addr in net and not _reserved(net, gateway):
+                row = _ensure_host(store, gateway)
+                _add_source(row, "route")
+                row.is_gateway = True
+
+        if neighbors_only:
+            if on_progress is not None:
+                on_progress(1, 1)
+            continue
 
         candidates = [
             str(item)
@@ -324,6 +397,8 @@ def run_scan(
             row.name = namer(row.ip) or ""
 
     for row in store.values():
+        if gateway and row.ip == gateway:
+            row.is_gateway = True
         if row.is_self and not row.name:
             row.name = namer(row.ip) or ""
 
@@ -333,16 +408,18 @@ def run_scan(
 def to_csv(hosts: list[ScanHost]) -> str:
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["ip", "name", "rtt_ms", "ports", "sources", "self"])
+    writer.writerow(["ip", "name", "mac", "rtt_ms", "ports", "sources", "self", "gateway"])
     for item in hosts:
         writer.writerow(
             [
                 item.ip,
                 item.name,
+                item.mac,
                 "" if item.rtt_ms is None else item.rtt_ms,
                 ";".join(str(p) for p in item.ports),
                 ";".join(item.sources),
                 "1" if item.is_self else "0",
+                "1" if item.is_gateway else "0",
             ]
         )
     return buf.getvalue()

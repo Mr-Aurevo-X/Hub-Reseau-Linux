@@ -2,11 +2,11 @@
 Type=Application
 Version=1.0
 Name=Hub Réseau
-Comment=Gestion système Linux (santé, monitoring, paquets, clichés)
-Comment[en]=Linux system manager (monitoring, services, cleaner)
+Comment=Hub réseau local : interfaces, parc, scan LAN, diagnostic, VPN
+Comment[en]=Local network hub: adapters, fleet, LAN scan, diagnostics, VPN
 Exec=hub-reseau
 Icon=org.mraurevox.HubReseau
 Terminal=false
-Categories=System;Monitor;
+Categories=Network;Monitor;
 StartupNotify=true
 StartupWMClass=org.mraurevox.HubReseau

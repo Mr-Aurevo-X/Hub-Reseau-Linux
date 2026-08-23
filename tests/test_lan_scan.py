@@ -67,6 +67,9 @@ def test_parse_neighbors_filters_states() -> None:
     ips = {row.ip for row in rows}
     assert ips == {"192.168.1.1", "192.168.1.2", "10.0.0.9"}
     assert all(row.source == "neigh" for row in rows)
+    by_ip = {row.ip: row.mac for row in rows}
+    assert by_ip["192.168.1.1"] == "aa:bb:cc:dd:ee:ff"
+    assert by_ip["192.168.1.2"] == "11:22:33:44:55:66"
 
 
 def test_run_scan_marks_self_excludes_network_broadcast_and_honors_cancel() -> None:
@@ -107,6 +110,8 @@ def test_run_scan_marks_self_excludes_network_broadcast_and_honors_cancel() -> N
     assert "192.168.1.0" not in ips
     assert "192.168.1.255" not in ips
     assert "192.168.1.1" in ips
+    gateway = next(h for h in hosts if h.ip == "192.168.1.1")
+    assert gateway.mac == "aa:bb:cc:dd:ee:ff"
     assert "192.168.1.20" in seen
     assert len(seen) < 250
 
@@ -157,10 +162,64 @@ def test_to_csv_and_default_export_path(tmp_path: Path, monkeypatch: pytest.Monk
         is_self=False,
     )
     text = lan_scan.to_csv([host])
-    assert text.splitlines()[0] == "ip,name,rtt_ms,ports,sources,self"
+    assert text.splitlines()[0] == "ip,name,mac,rtt_ms,ports,sources,self,gateway"
     assert "192.168.1.4" in text
     assert "22;445" in text
     path = lan_scan.default_export_path()
     assert path.parent == tmp_path / "Documents"
     assert path.name.startswith("hub-reseau-scan-")
     assert path.suffix == ".csv"
+
+
+def test_run_scan_marks_gateway_and_can_skip_ping_sweep() -> None:
+    payload = json.dumps(
+        [
+            {
+                "ifname": "eth0",
+                "addr_info": [{"family": "inet", "local": "192.168.1.10", "prefixlen": 24}],
+            }
+        ]
+    )
+    seen: list[str] = []
+
+    def ping(address: str) -> dict[str, object]:
+        seen.append(address)
+        return {"online": True, "rtt_ms": 1.0}
+
+    hosts = lan_scan.run_scan(
+        ip_json=payload,
+        neigh_text="192.168.1.1 dev eth0 lladdr aa:bb:cc:dd:ee:ff REACHABLE\n",
+        ping_fn=ping,
+        tcp_fn=lambda *_a, **_k: {"online": False},
+        cancel=threading.Event(),
+        resolve_name=lambda _ip: "",
+        neighbors_only=True,
+        gateway_ip="192.168.1.1",
+    )
+    assert seen == []
+    gateway = next(h for h in hosts if h.ip == "192.168.1.1")
+    assert gateway.is_gateway is True
+    assert gateway.mac == "aa:bb:cc:dd:ee:ff"
+    assert "neigh" in gateway.sources
+    assert "route" in gateway.sources
+
+
+def test_last_scan_roundtrip(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    hosts = [
+        lan_scan.ScanHost(
+            ip="192.168.1.1",
+            name="gw",
+            mac="aa:bb:cc:dd:ee:ff",
+            sources=["neigh", "route"],
+            is_gateway=True,
+        )
+    ]
+    lan_scan.save_last_scan(hosts, neighbors_only=True, at="2026-08-23T20:00:00")
+    data = lan_scan.load_last_scan()
+    assert data is not None
+    assert data["count"] == 1
+    assert data["neighbors_only"] is True
+    assert data["at"] == "2026-08-23T20:00:00"
+    assert data["hosts"][0]["ip"] == "192.168.1.1"
+    assert data["hosts"][0]["is_gateway"] is True

@@ -2,9 +2,10 @@
 Type=Application
 Version=1.0
 Name=Hub Réseau
-Comment=Gestion système Linux (monitoring, services, nettoyeur…)
+Comment=Hub réseau local : interfaces, parc, scan LAN, diagnostic, VPN
+Comment[en]=Local network hub: adapters, fleet, LAN scan, diagnostics, VPN
 Exec=bash -c 'SHARE="$(dirname "$(readlink -f "%k")")"; exec bash "$SHARE/LANCER.sh"'
-Icon=utilities-system-monitor
+Icon=network-workgroup
 Terminal=true
-Categories=System;Monitor;
+Categories=Network;Monitor;
 StartupNotify=true

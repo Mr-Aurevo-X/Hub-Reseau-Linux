@@ -128,9 +128,12 @@ def test_vpn_page_module_toggles_profiles() -> None:
 
 
 def test_diag_ui_exports_and_vpn_builder() -> None:
-    text = (_ROOT / "ui" / "main_window.py").read_text(encoding="utf-8")
-    assert "def _build_vpn_page" in text
-    assert "network_diag.write_export" in text
-    assert "get_clipboard" in text
-    assert "run_in_thread" in text
-    assert "def _build_lan_scan_page" in text
+    main = (_ROOT / "ui" / "main_window.py").read_text(encoding="utf-8")
+    diag = (_ROOT / "ui" / "pages" / "diag_page.py").read_text(encoding="utf-8")
+    assert "def _build_vpn_page" in main
+    assert "def _build_lan_scan_page" in main
+    assert "network_diag.write_export" in diag
+    assert "get_clipboard" in diag
+    assert "run_in_thread" in diag
+    assert "diag_idle" in diag
+    assert "box.append(Gtk.ScrolledWindow(vexpand=True, child=listbox))\n    return box" in diag

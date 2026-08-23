@@ -136,6 +136,11 @@ def test_icmp_denied_falls_back_to_tcp() -> None:
     assert "icmp" in result["error"] or "permis" in result["error"].lower() or result["fallback"]
 
 
+def test_last_probe_when_formats_stamp() -> None:
+    assert fleet.last_probe_when({}) == ""
+    assert fleet.last_probe_when({"last_probe_at": "2026-08-23T20:15:01"}) == "2026-08-23 20:15"
+
+
 def test_to_csv_has_header() -> None:
     machine = fleet.new_machine(name="Hub-Win", os_name="Windows", address="10.0.0.5", probe="tcp:3389")
     machine["last_online"] = False

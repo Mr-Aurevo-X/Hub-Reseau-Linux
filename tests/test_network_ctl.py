@@ -51,6 +51,17 @@ def test_home_summary_off_when_radio_disabled(monkeypatch: pytest.MonkeyPatch) -
         },
     )
     monkeypatch.setattr(home_summary.fleet, "load_fleet", lambda: {"machines": []})
+    monkeypatch.setattr(
+        home_summary.adapters,
+        "snapshot",
+        lambda: home_summary.adapters.AdapterSnapshot(adapters=[], gateway="", default_iface="", dns=[]),
+    )
+    monkeypatch.setattr(
+        home_summary.vpn_ctl,
+        "list_connections",
+        lambda: {"available": True, "connections": []},
+    )
+    monkeypatch.setattr(home_summary.lan_scan, "load_last_scan", lambda: None)
     lines = home_summary.summary_lines()
     joined = "\n".join(lines)
     assert "Home" not in joined

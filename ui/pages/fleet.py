@@ -181,15 +181,23 @@ def _make_machine_tile(item: dict[str, Any]) -> Gtk.Widget:
     name = Gtk.Label(label=str(item.get("name") or "?"), wrap=True, justify=Gtk.Justification.CENTER)
     name.add_css_class("fleet-tile-name")
     name.set_max_width_chars(16)
+    when = fleet.last_probe_when(item)
+    if when:
+        probe = i18n.t("fleet_last_probe", when=when, status=_status_label(item))
+    else:
+        probe = i18n.t("fleet_never_probed")
     meta = Gtk.Label(
         label=f"{item.get('os') or '—'} · {item.get('address') or '—'} · {_status_label(item)}",
         wrap=True,
         justify=Gtk.Justification.CENTER,
     )
     meta.add_css_class("fleet-tile-meta")
+    probe_lbl = Gtk.Label(label=probe, wrap=True, justify=Gtk.Justification.CENTER)
+    probe_lbl.add_css_class("fleet-tile-meta")
     box.append(icon)
     box.append(name)
     box.append(meta)
+    box.append(probe_lbl)
     box.set_name(str(item.get("id") or ""))
     return box
 

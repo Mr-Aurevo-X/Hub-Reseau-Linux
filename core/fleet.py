@@ -370,6 +370,10 @@ def apply_probe(machine: dict[str, Any], result: dict[str, Any]) -> dict[str, An
     return updated
 
 
+def last_probe_when(machine: dict[str, Any]) -> str:
+    return str(machine.get("last_probe_at") or "").strip().replace("T", " ")[:16]
+
+
 def to_csv(machines: list[dict[str, Any]]) -> str:
     buf = io.StringIO()
     writer = csv.writer(buf)

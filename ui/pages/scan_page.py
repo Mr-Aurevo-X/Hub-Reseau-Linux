@@ -13,7 +13,7 @@ gi.require_version("Adw", "1")
 
 from gi.repository import Adw, GLib, Gtk  # noqa: E402
 
-from core import fleet, i18n, lan_scan
+from core import adapters, fleet, i18n, lan_scan
 from ui.components import run_in_thread, show_toast
 
 
@@ -34,10 +34,12 @@ def build(win: Any) -> Gtk.Widget:
     win._lan_scan_cancel.set_sensitive(False)
     add_btn = Gtk.Button(label=i18n.t("lan_scan_add_fleet"))
     export_btn = Gtk.Button(label=i18n.t("export"))
+    win._lan_scan_neighbors_only = Gtk.CheckButton(label=i18n.t("lan_scan_neighbors_only"))
     bar.append(win._lan_scan_start)
     bar.append(win._lan_scan_cancel)
     bar.append(add_btn)
     bar.append(export_btn)
+    bar.append(win._lan_scan_neighbors_only)
     win._lan_scan_progress = Gtk.ProgressBar()
     win._lan_scan_progress.set_show_text(True)
     win._lan_scan_status = Gtk.Label(label=i18n.t("lan_scan_empty"), xalign=0, wrap=True)
@@ -66,8 +68,35 @@ def build(win: Any) -> Gtk.Widget:
     box.append(win._lan_scan_status)
     box.append(scroll)
     _refresh_subnet_label(win)
+    _restore_last(win)
     render(win)
     return box
+
+
+def _restore_last(win: Any) -> None:
+    data = lan_scan.load_last_scan()
+    if not data:
+        return
+    hosts: list[lan_scan.ScanHost] = []
+    for item in data.get("hosts") or []:
+        if not isinstance(item, dict) or not item.get("ip"):
+            continue
+        hosts.append(
+            lan_scan.ScanHost(
+                ip=str(item.get("ip") or ""),
+                name=str(item.get("name") or ""),
+                mac=str(item.get("mac") or ""),
+                ports=[int(p) for p in (item.get("ports") or []) if str(p).isdigit()],
+                sources=[str(s) for s in (item.get("sources") or [])],
+                is_self=bool(item.get("is_self")),
+                is_gateway=bool(item.get("is_gateway")),
+            )
+        )
+    win._lan_scan_hosts = hosts
+    if hasattr(win, "_lan_scan_neighbors_only"):
+        win._lan_scan_neighbors_only.set_active(bool(data.get("neighbors_only")))
+    if hosts:
+        win._lan_scan_status.set_text(i18n.t("lan_scan_done", count=len(hosts)))
 
 
 def _refresh_subnet_label(win: Any) -> None:
@@ -99,10 +128,17 @@ def render(win: Any) -> None:
     for host_row in hosts:
         row = Adw.ActionRow()
         title = host_row.ip
+        tags = []
         if host_row.is_self:
-            title = f"{host_row.ip} ({i18n.t('lan_scan_self')})"
+            tags.append(i18n.t("lan_scan_self"))
+        if host_row.is_gateway:
+            tags.append(i18n.t("lan_scan_gateway"))
+        if tags:
+            title = f"{host_row.ip} ({', '.join(tags)})"
         row.set_title(title)
         bits = [host_row.name] if host_row.name else []
+        if host_row.mac:
+            bits.append(i18n.t("lan_scan_mac", mac=host_row.mac))
         if host_row.rtt_ms is not None:
             bits.append(f"{host_row.rtt_ms:.1f} ms")
         if host_row.ports:
@@ -161,8 +197,18 @@ def start_scan(win: Any) -> None:
 
         GLib.idle_add(tick)
 
+    neighbors_only = bool(
+        hasattr(win, "_lan_scan_neighbors_only") and win._lan_scan_neighbors_only.get_active()
+    )
+
     def work() -> list[lan_scan.ScanHost]:
-        return lan_scan.run_scan(cancel=cancel, on_progress=on_progress)
+        gateway = adapters.snapshot().gateway
+        return lan_scan.run_scan(
+            cancel=cancel,
+            on_progress=on_progress,
+            neighbors_only=neighbors_only,
+            gateway_ip=gateway,
+        )
 
     def done(result: Any, error: BaseException | None) -> None:
         _set_running(win, False)
@@ -174,6 +220,10 @@ def start_scan(win: Any) -> None:
         win._lan_scan_hosts = hosts
         win._lan_scan_progress.set_fraction(1.0)
         win._lan_scan_status.set_text(i18n.t("lan_scan_done", count=len(hosts)))
+        try:
+            lan_scan.save_last_scan(hosts, neighbors_only=neighbors_only)
+        except OSError:
+            pass
         render(win)
 
     run_in_thread(work, done)

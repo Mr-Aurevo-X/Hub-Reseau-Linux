@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Gest_Linux_Pro core system modules."""
+"""Hub Réseau core modules."""
 
 __all__ = [
     "monitoring",

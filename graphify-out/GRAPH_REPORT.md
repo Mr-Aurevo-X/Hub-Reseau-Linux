@@ -1,66 +1,65 @@
 # Graph Report - Hub-Reseau  (2026-08-23)
 
 ## Corpus Check
-- 127 files · ~57,750 words
+- 133 files · ~56,700 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1366 nodes · 3104 edges · 78 communities (65 shown, 13 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.64)
+- 1355 nodes · 3090 edges · 72 communities (62 shown, 10 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 23 edges (avg confidence: 0.67)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5bff45fc`
+- Built from commit: `542c7576`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- main_window.py
+- dialogs/settings.py
 - updater.py
-- i18n.py
+- core/settings.py
 - backup.py
-- MainWindow
+- ._show_page
 - core/fleet.py
-- cleaner.py
+- clean
 - t
 - lan_scan.py
 - packages.py
-- run_in_thread
-- main.py
+- show_toast
+- test_display_env.py
 - host_probe.py
 - machine_sheet.py
 - connections.py
 - monitoring.py
-- test_features.py
+- run
 - which
 - jobs.py
-- dialogs/settings.py
+- adapters.py
 - vpn_ctl.py
 - adw_compat.py
 - is_flatpak
 - install.sh
-- ui_kit/compat.py
+- NavSidebar
 - firewall.py
 - host.py
 - timers.py
-- ._render_packages
+- scan_page.py
 - CircularGauge
-- Any
-- evaluate
+- vpn_page.py
+- make_search_refresh_bar
 - logs.py
 - autostart.py
 - ActionListRow
 - disk_usage.py
 - smart.py
-- Any
+- nav.py
 - core/legal.py
 - list_sessions
-- plugins.py
+- ._rebuild_pages
 - collect_startup_compatibility
 - users.py
-- write_update_script
-- ._build_network_page
-- t
+- make_clamped_list
+- MainWindow
 - build-flatpak.sh
 - LANCER.sh
 - alerts.py
@@ -68,22 +67,18 @@
 - sync-public-readmes.sh
 - add_status_class
 - manifest.json
-- builders_for
+- main_window.py
 - publish-flatpak-release.sh
 - INSTALLER-RACCOURCI.sh
 - INSTALLER-RACCOURCI-FLATPAK.sh
 - uninstall.sh
 - test_network_ctl.py
-- updates_dir
-- test_packages_terminal.py
 - Hub Réseau 2.0 — design
 - Conditions d'utilisation — Hub Réseau
 - Legal notice — Hub Réseau
 - Hub Réseau (Linux)
 - Global Constraints
 - Vie privée / RGPD — Hub Réseau
-- test_update_safety.py
-- ._refresh_logs
 - Flathub (futur)
 - COMPAT.md
 - public-legal-notes.md
@@ -91,77 +86,77 @@
 - licenses.md
 
 ## God Nodes (most connected - your core abstractions)
-1. `MainWindow` - 131 edges
-2. `run_in_thread()` - 55 edges
-3. `show_toast()` - 45 edges
-4. `t()` - 37 edges
-5. `which()` - 29 edges
-6. `run()` - 24 edges
-7. `confirm_dialog()` - 20 edges
-8. `new_machine()` - 19 edges
-9. `assemble_sheet()` - 18 edges
-10. `make_message_dialog()` - 18 edges
+1. `t()` - 60 edges
+2. `MainWindow` - 46 edges
+3. `show_toast()` - 38 edges
+4. `run_in_thread()` - 32 edges
+5. `which()` - 30 edges
+6. `run()` - 25 edges
+7. `new_machine()` - 19 edges
+8. `assemble_sheet()` - 18 edges
+9. `run_scan()` - 17 edges
+10. `make_message_dialog()` - 17 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `test_validate_pkg_id()` --calls--> `_validate_pkg_id()`  [EXTRACTED]
   tests/test_validators.py → core/packages.py
-- `test_update_urls_allow_our_github_only()` --calls--> `_require_allowed_url()`  [EXTRACTED]
-  tests/test_update_safety.py → core/updater.py
-- `test_flatpak_install_block_includes_menu_shortcut()` --calls--> `flatpak_install_block()`  [EXTRACTED]
-  tests/test_update_safety.py → core/updater.py
 - `make_switch_row()` --indirect_call--> `set_active()`  [INFERRED]
   ui/adw_compat.py → core/vpn_ctl.py
 - `HubReseauApp` --uses--> `MainWindow`  [INFERRED]
   main.py → ui/main_window.py
+- `main()` --uses--> `HubReseauApp`  [INFERRED]
+  tests/gtk_smoke.py → main.py
+- `MainWindow` --uses--> `ShellLayout`  [INFERRED]
+  ui/main_window.py → ui_kit/shell.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (78 total, 13 thin omitted)
+## Communities (72 total, 10 thin omitted)
 
-### Community 0 - "main_window.py"
-Cohesion: 0.13
-Nodes (18): HeaderBar, apply_app_css(), build_main_layout(), content_title_parts(), format_app_line(), _new_update_button(), Any, Button (+10 more)
+### Community 0 - "dialogs/settings.py"
+Cohesion: 0.05
+Nodes (71): HeaderBar, RGBA, choose_rgba(), open_external_uri(), present_alert(), present_startup_error(), Any, Widget (+63 more)
 
 ### Community 1 - "updater.py"
-Cohesion: 0.20
-Nodes (25): Channel, app_display_name(), apply_update(), _asset_name(), _asset_url(), check_for_update(), _find_extract_root(), flatpak_install_block() (+17 more)
-
-### Community 2 - "i18n.py"
 Cohesion: 0.06
-Nodes (49): get_language(), nav_items(), normalize_language(), set_language(), _copy_fleet_from_gest(), _copy_legacy_tree(), Path, run_first_launch_migration() (+41 more)
+Nodes (79): Channel, _pkg_lock_preamble(), pkg_terminal_done_path(), ensure_example_plugin(), list_plugins(), PluginError, plugins_dir(), Any (+71 more)
+
+### Community 2 - "core/settings.py"
+Cohesion: 0.07
+Nodes (46): _cpu_temp_c(), evaluate(), _f(), _item(), Any, Return score 0–100, grade A–D, items and failing recommendations., _root_disk_percent(), get_language() (+38 more)
 
 ### Community 3 - "backup.py"
 Cohesion: 0.08
 Nodes (55): BackupError, create_snapshot(), delete_snapshot(), detect_backend(), is_available(), list_snapshots(), _list_timeshift(), _needs_root() (+47 more)
 
 ### Community 5 - "core/fleet.py"
-Cohesion: 0.10
-Nodes (51): apply_probe(), default_export_path(), delete_machine(), empty_store(), export_store_json(), fleet_path(), FleetError, _icmp_denied() (+43 more)
+Cohesion: 0.09
+Nodes (53): apply_probe(), default_export_path(), delete_machine(), empty_store(), export_store_json(), fleet_path(), FleetError, _icmp_denied() (+45 more)
 
-### Community 6 - "cleaner.py"
+### Community 6 - "clean"
 Cohesion: 0.07
-Nodes (49): _browser_cache_paths(), clean(), CleanerError, _dir_size(), _home(), _human_mib(), _is_under_whitelist(), Any (+41 more)
+Nodes (50): _browser_cache_paths(), clean(), CleanerError, _dir_size(), _home(), _human_mib(), _is_under_whitelist(), Any (+42 more)
 
 ### Community 7 - "t"
-Cohesion: 0.06
-Nodes (72): Clamp, Any, t(), FlowBox, FlowBoxChild, SearchEntry, Gtk.SearchEntry.set_placeholder_text exists only since GTK 4.10., set_placeholder_text() (+64 more)
+Cohesion: 0.20
+Nodes (28): Any, t(), FlowBox, FlowBoxChild, build(), _clear_box(), delete_selected(), edit_selected() (+20 more)
 
 ### Community 8 - "lan_scan.py"
 Cohesion: 0.09
-Nodes (41): _add_source(), _as_ipv4(), clamp_network(), default_export_path(), _default_ping(), _ensure_host(), _ip_addr_json(), _ip_neigh_text() (+33 more)
+Nodes (46): _add_source(), _as_ipv4(), clamp_network(), default_export_path(), _default_ping(), _ensure_host(), _ip_addr_json(), _ip_neigh_text() (+38 more)
 
 ### Community 9 - "packages.py"
-Cohesion: 0.20
-Nodes (23): apply_updates(), available_managers(), check_updates(), flatpak_permissions(), _list_apt(), _list_dnf(), _list_flatpak(), list_packages() (+15 more)
+Cohesion: 0.11
+Nodes (39): apply_updates(), available_managers(), check_updates(), flatpak_permissions(), host_manager_labels(), launch_apply_updates_terminal(), launch_check_updates_terminal(), _list_apt() (+31 more)
 
-### Community 10 - "run_in_thread"
-Cohesion: 0.08
-Nodes (8): confirm_dialog(), BaseException, ToastOverlay, Window, Run ``fn`` in a worker thread and deliver result on the GTK main loop., run_in_thread(), show_toast(), Path
+### Community 10 - "show_toast"
+Cohesion: 0.16
+Nodes (34): make_switch_row(), Gtk.SearchEntry.set_placeholder_text exists only since GTK 4.10., set_placeholder_text(), make_spinner(), BaseException, ToastOverlay, Widget, Prefer Adw.Spinner (libadwaita ≥ 1.6), fall back to Gtk.Spinner. (+26 more)
 
-### Community 11 - "main.py"
-Cohesion: 0.09
-Nodes (26): apply_safe_display_env(), cairo_display_env(), host_needs_map_hold(), _host_os_release(), _host_product_name(), needs_cairo_gsk(), needs_map_hold(), Path (+18 more)
+### Community 11 - "test_display_env.py"
+Cohesion: 0.18
+Nodes (18): apply_safe_display_env(), cairo_display_env(), host_needs_map_hold(), _host_os_release(), _host_product_name(), needs_cairo_gsk(), needs_map_hold(), Path (+10 more)
 
 ### Community 12 - "host_probe.py"
 Cohesion: 0.16
@@ -179,9 +174,9 @@ Nodes (30): add_allowlist_entry(), classify(), ConnectionError, endpoint_ip(), _
 Cohesion: 0.15
 Nodes (28): _amd_gpu(), _battery_info(), collect_metrics(), _cpu_info(), _cpu_temperatures(), detailed_sensors(), _disk_info(), format_uptime() (+20 more)
 
-### Community 16 - "test_features.py"
-Cohesion: 0.18
-Nodes (17): default_export_path(), export_report(), _listening_ports(), Path, quick_report(), traceroute_lines(), write_export(), MonkeyPatch (+9 more)
+### Community 16 - "run"
+Cohesion: 0.15
+Nodes (21): kill_process(), CompletedProcess, renice_process(), run(), default_export_path(), export_report(), _listening_ports(), Path (+13 more)
 
 ### Community 17 - "which"
 Cohesion: 0.23
@@ -191,49 +186,57 @@ Nodes (19): Locate a host executable. ``command -v`` is a shell builtin, not a b
 Cohesion: 0.14
 Nodes (20): JobError, Exception, Path, Raised when a host job cannot start., Allow only ``*.sh`` files written under ``updater.updates_dir()``., Argv for the host: util-linux ``script`` PTY when available, else bash., Start the script on the host; caller reads ``stdout`` (merged stderr)., script_argv() (+12 more)
 
-### Community 19 - "dialogs/settings.py"
-Cohesion: 0.24
-Nodes (21): RGBA, choose_rgba(), present(), Any, Window, apply_theme(), build_css(), _css_for_merged() (+13 more)
+### Community 19 - "adapters.py"
+Cohesion: 0.12
+Nodes (34): Adapter, AdapterSnapshot, collect_snapshot(), DefaultRoute, format_bps(), format_bytes(), _ip_json(), parse_addr_json() (+26 more)
 
 ### Community 20 - "vpn_ctl.py"
 Cohesion: 0.18
 Nodes (19): _env_proxy(), _gsettings_proxy_mode(), list_connections(), list_proxy(), parse_connections(), Any, Exception, Invalid VPN operation or missing tooling. (+11 more)
 
 ### Community 21 - "adw_compat.py"
-Cohesion: 0.09
-Nodes (26): Adjustment, test_call_if_present_true_and_false_branches(), test_first_attr_falls_back_when_modern_missing(), test_first_attr_prefers_modern_name(), CompatDialog, make_message_dialog(), make_spin_row(), make_switch_row() (+18 more)
+Cohesion: 0.10
+Nodes (23): Adjustment, test_call_if_present_true_and_false_branches(), test_first_attr_falls_back_when_modern_missing(), test_first_attr_prefers_modern_name(), CompatDialog, make_spin_row(), make_toolbar(), present_about() (+15 more)
 
 ### Community 22 - "is_flatpak"
-Cohesion: 0.20
-Nodes (15): is_flatpak(), kill_process(), list_processes(), process_details(), process_tree(), ProcessError, Any, Exception (+7 more)
+Cohesion: 0.17
+Nodes (17): install_flatpak_host_bridge(), is_flatpak(), Patch ``subprocess.run`` / ``shutil.which`` so system tools hit the host., kill_process(), list_processes(), process_details(), process_tree(), ProcessError (+9 more)
 
 ### Community 23 - "install.sh"
 Cohesion: 0.25
 Nodes (17): detect_pkg_family(), ensure_path_hint(), flatpak_hint(), install_app_files(), install_deps_apk(), install_deps_apt(), install_deps_dnf(), install_deps_pacman() (+9 more)
 
-### Community 24 - "ui_kit/compat.py"
-Cohesion: 0.14
-Nodes (21): open_external_uri(), present_alert(), present_startup_error(), Any, Widget, Window, Show a modal error when the app fails before the main window exists., set_bin_child() (+13 more)
+### Community 24 - "NavSidebar"
+Cohesion: 0.18
+Nodes (6): ListBoxRow, NavSidebar, Any, ListBox, Widget, Collapsible group sidebar with one ListBox per group.
 
 ### Community 25 - "firewall.py"
 Cohesion: 0.25
 Nodes (15): detect_backend(), _extract_rules(), _firewalld_status(), FirewallError, is_available(), _needs_root(), _parse_active(), Any (+7 more)
 
 ### Community 26 - "host.py"
-Cohesion: 0.21
-Nodes (21): collect_inventory(), collect_metrics(), _effective_host_cwd(), host_cwd(), _host_probe(), install_flatpak_host_bridge(), _is_sandbox_path(), kill_process() (+13 more)
+Cohesion: 0.31
+Nodes (15): collect_inventory(), collect_metrics(), _effective_host_cwd(), host_cwd(), _host_probe(), _is_sandbox_path(), list_processes(), popen() (+7 more)
 
 ### Community 27 - "timers.py"
 Cohesion: 0.23
 Nodes (14): control_timer(), list_timers(), parse_list_timers_output(), Any, CompletedProcess, Exception, Raised when a systemd timer operation fails., Parse ``systemctl list-timers --all`` legend output. (+6 more)
 
-### Community 29 - "CircularGauge"
-Cohesion: 0.07
-Nodes (11): DrawingArea, CircularGauge, CoreBars, MetricRow, Any, Compact per-core CPU usage bars., Simple sparkline chart for recent metric history., Simple key/value metric row. (+3 more)
+### Community 28 - "scan_page.py"
+Cohesion: 0.32
+Nodes (15): add_selected(), build(), cancel_scan(), _clear_list(), export_csv(), Any, ListBox, Widget (+7 more)
 
-### Community 31 - "evaluate"
-Cohesion: 0.33
-Nodes (11): _cpu_temp_c(), evaluate(), _f(), _item(), Any, Return score 0–100, grade A–D, items and failing recommendations., _root_disk_percent(), _metrics() (+3 more)
+### Community 29 - "CircularGauge"
+Cohesion: 0.08
+Nodes (10): DrawingArea, CircularGauge, CoreBars, MetricRow, Any, Compact per-core CPU usage bars., Simple sparkline chart for recent metric history., Simple key/value metric row. (+2 more)
+
+### Community 30 - "vpn_page.py"
+Cohesion: 0.23
+Nodes (13): build(), Any, Widget, refresh(), build(), _clear_list(), Any, ListBox (+5 more)
+
+### Community 31 - "make_search_refresh_bar"
+Cohesion: 0.15
+Nodes (13): SearchEntry, ToggleButton, debounce(), Return a debounced callable that schedules ``callback`` after ``delay_ms``., make_filter_chips(), make_search_refresh_bar(), Any, BaseException (+5 more)
 
 ### Community 32 - "logs.py"
 Cohesion: 0.21
@@ -255,9 +258,9 @@ Nodes (9): DiskUsageError, Any, CompletedProcess, Exception, Path, Raised when d
 Cohesion: 0.31
 Nodes (10): is_available(), list_block_devices(), Any, CompletedProcess, Exception, query_device(), Raised when SMART query fails., _run() (+2 more)
 
-### Community 37 - "Any"
-Cohesion: 0.16
-Nodes (16): _BlockHttpHandler, download_bundle(), _http_json(), _opener(), Any, Exception, Raised when download or install fails after an update was offered., Reject anything that is not HTTPS GitHub (API, our repos, or release CDN). (+8 more)
+### Community 37 - "nav.py"
+Cohesion: 0.35
+Nodes (11): test_flat_nav_starts_with_home(), test_flat_nav_unique_keys(), test_group_for_known_pages(), test_nav_registry_matches_pages(), flat_nav_items(), group_for_page(), nav_groups(), NavGroup (+3 more)
 
 ### Community 38 - "core/legal.py"
 Cohesion: 0.36
@@ -267,10 +270,6 @@ Nodes (7): copyright_line(), _extract_lang(), legal_markdown(), _legal_paths(), 
 Cohesion: 0.36
 Nodes (8): list_sessions(), Any, CompletedProcess, Exception, Raised when session listing fails., _run(), SessionError, _who_fallback()
 
-### Community 40 - "plugins.py"
-Cohesion: 0.25
-Nodes (15): ensure_example_plugin(), list_plugins(), PluginError, plugins_dir(), Any, Exception, Path, Raised when a plugin fails. (+7 more)
-
 ### Community 41 - "collect_startup_compatibility"
 Cohesion: 0.36
 Nodes (7): collect_startup_compatibility(), _host_shell_works(), Any, Path, Return non-fatal compatibility findings used at startup., _read_os_release(), _which_many()
@@ -279,13 +278,13 @@ Nodes (7): collect_startup_compatibility(), _host_shell_works(), Any, Path, Retu
 Cohesion: 0.32
 Nodes (7): list_groups(), list_users(), lock_user(), Any, Exception, Raised when user operations fail., UsersError
 
-### Community 43 - "write_update_script"
-Cohesion: 0.17
-Nodes (15): launch_check_terminal(), launch_update_terminal(), _maybe_host(), open_terminal_script(), wget first (Mint 21 often has no curl), then curl. Never emit a glob like *curl., Terminal script that shows the update-check result (and optional install)., Write a visible bash updater that downloads, installs, then relaunches., Open Konsole (or another terminal) running the script; do not wait for exit. (+7 more)
+### Community 43 - "make_clamped_list"
+Cohesion: 0.67
+Nodes (3): Clamp, make_clamped_list(), ListBox
 
-### Community 45 - "t"
-Cohesion: 0.25
-Nodes (12): present(), Window, _assemble_window(), _build_footer(), build_title(), _copy_text(), present(), Widget (+4 more)
+### Community 44 - "MainWindow"
+Cohesion: 0.14
+Nodes (3): MainWindow, Any, Widget
 
 ### Community 46 - "build-flatpak.sh"
 Cohesion: 0.48
@@ -315,21 +314,13 @@ Nodes (3): StatusKind, add_status_class(), css_class()
 Cohesion: 0.50
 Nodes (3): default, presets, version
 
-### Community 53 - "builders_for"
-Cohesion: 0.50
-Nodes (3): builders_for(), Any, Return page key → zero-arg builder bound to ``win``.
+### Community 53 - "main_window.py"
+Cohesion: 0.14
+Nodes (14): make_message_dialog(), response_appearance(), apply_app_css(), confirm_dialog(), Window, build(), Any, Widget (+6 more)
 
 ### Community 61 - "test_network_ctl.py"
-Cohesion: 0.24
-Nodes (10): summary_lines(), parse_wifi_radio(), Return ``(available, enabled)`` from ``WIFI:WIFI-HW`` or ``nmcli radio wifi``., MonkeyPatch, test_home_summary_off_when_radio_disabled(), test_parse_wifi_radio_disabled_without_hardware(), test_parse_wifi_radio_french_desactive(), test_wifi_rescan_calls_nmcli() (+2 more)
-
-### Community 62 - "updates_dir"
 Cohesion: 0.29
-Nodes (12): launch_apply_updates_terminal(), launch_check_updates_terminal(), _pkg_lock_preamble(), pkg_terminal_done_path(), Path, Host terminal script: live check (no capture). ``set -u``, not ``set -e``., Host terminal script: live upgrade. ``set -u``, not ``set -e``., write_apply_updates_script() (+4 more)
-
-### Community 63 - "test_packages_terminal.py"
-Cohesion: 0.33
-Nodes (8): host_manager_labels(), Managers the apply script will actually run (Flatpak-aware ``which``)., _assert_pkg_lock(), Path, test_host_manager_labels_with_pkexec_includes_pacman(), test_host_manager_labels_without_pkexec_skips_pacman(), test_package_apply_script_is_live(), test_package_check_script_is_live()
+Nodes (9): parse_wifi_radio(), Return ``(available, enabled)`` from ``WIFI:WIFI-HW`` or ``nmcli radio wifi``., MonkeyPatch, test_home_summary_off_when_radio_disabled(), test_parse_wifi_radio_disabled_without_hardware(), test_parse_wifi_radio_french_desactive(), test_wifi_rescan_calls_nmcli(), test_wifi_rescan_requires_nmcli() (+1 more)
 
 ### Community 64 - "Hub Réseau 2.0 — design"
 Cohesion: 0.22
@@ -355,10 +346,6 @@ Nodes (5): Global Constraints, Hub Réseau 2.0 Implementation Plan, Task 1: heal
 Cohesion: 0.33
 Nodes (5): Collecte par l'éditeur, Données locales, Droit applicable, Réseau, Vie privée / RGPD — Hub Réseau
 
-### Community 71 - "test_update_safety.py"
-Cohesion: 0.40
-Nodes (4): parametrize, test_flatpak_install_block_includes_menu_shortcut(), test_update_urls_allow_our_github_only(), test_update_urls_reject_backdoors()
-
 ### Community 73 - "Flathub (futur)"
 Cohesion: 0.50
 Nodes (3): Flathub (futur), Prérequis Flathub (quand soumis), Source correspondante
@@ -366,22 +353,22 @@ Nodes (3): Flathub (futur), Prérequis Flathub (quand soumis), Source correspond
 ## Knowledge Gaps
 - **41 isolated node(s):** `INSTALLER-RACCOURCI-FLATPAK.sh script`, `INSTALLER-RACCOURCI.sh script`, `PYTHONPATH`, `PYTHONUNBUFFERED`, `version` (+36 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **13 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `MainWindow` connect `MainWindow` to `main_window.py`, `ActionListRow`, `i18n.py`, `._refresh_logs`, `run_in_thread`, `main.py`, `._build_network_page`, `adw_compat.py`, `._render_packages`, `CircularGauge`, `Any`?**
-  _High betweenness centrality (0.080) - this node is a cross-community bridge._
-- **Why does `run_in_thread()` connect `run_in_thread` to `main_window.py`, `ActionListRow`, `MainWindow`, `t`, `._refresh_logs`, `._build_network_page`, `._render_packages`, `CircularGauge`, `Any`?**
-  _High betweenness centrality (0.025) - this node is a cross-community bridge._
-- **Why does `t()` connect `t` to `ui_kit/compat.py`, `main_window.py`, `dialogs/settings.py`?**
+- **Why does `MainWindow` connect `MainWindow` to `dialogs/settings.py`, `core/settings.py`, `ActionListRow`, `._show_page`, `._rebuild_pages`, `main_window.py`, `NavSidebar`?**
+  _High betweenness centrality (0.033) - this node is a cross-community bridge._
+- **Why does `t()` connect `t` to `core/settings.py`, `nav.py`, `clean`, `show_toast`, `run`, `jobs.py`, `adapters.py`, `main_window.py`, `scan_page.py`, `vpn_page.py`?**
   _High betweenness centrality (0.024) - this node is a cross-community bridge._
-- **Are the 5 inferred relationships involving `MainWindow` (e.g. with `HubReseauApp` and `ActionListRow`) actually correct?**
-  _`MainWindow` has 5 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `which()` connect `which` to `updater.py`, `lan_scan.py`, `collect_startup_compatibility`, `packages.py`, `connections.py`, `run`, `jobs.py`, `adapters.py`, `vpn_ctl.py`, `is_flatpak`, `host.py`?**
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
+- **Are the 4 inferred relationships involving `MainWindow` (e.g. with `HubReseauApp` and `ActionListRow`) actually correct?**
+  _`MainWindow` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `INSTALLER-RACCOURCI-FLATPAK.sh script`, `INSTALLER-RACCOURCI.sh script`, `PYTHONPATH` to the rest of the system?**
   _41 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `main_window.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.1310344827586207 - nodes in this community are weakly interconnected._
-- **Should `i18n.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.061457418788410885 - nodes in this community are weakly interconnected._
+- **Should `dialogs/settings.py` be split into smaller, more focused modules?**
+  _Cohesion score 0.05049442457395329 - nodes in this community are weakly interconnected._
+- **Should `updater.py` be split into smaller, more focused modules?**
+  _Cohesion score 0.06282271944922548 - nodes in this community are weakly interconnected._
