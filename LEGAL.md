@@ -25,7 +25,7 @@ Mr-Aurevo-X **ne collecte aucune donnée personnelle**. Pas de compte, pas de t�
 - **Scan :** sur action, découverte du LAN **privé** (voisins `ip neigh` + ping `/24`, ports 22/80/443/3389/445). Pas de nmap, pas de sweep Internet.
 - **VPN / proxy :** lecture des profils NetworkManager (VPN / WireGuard) et variables de proxy. Activer / désactiver un profil existant (nmcli, pkexec si besoin). Aucune création de profil.
 - **Parc :** machines que **vous** saisissez (ou ajoutez depuis Scan). Sondes TCP / ICMP sur action. Pas de mot de passe stocké, pas d’agent distant.
-- Dons : Discord / PayPal / Revolut, sur clic.
+- Dons : Discord / crypto (in-app), sur clic.
 
 Droit belge.
 
